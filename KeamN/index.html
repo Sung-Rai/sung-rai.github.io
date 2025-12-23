@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KeamN</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/script.js" defer></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="nav-logo">KeamN - A KeamK Clone for LoL</div>
+
+        <ul class="nav-links">
+            <li><a href="index.html">Generate a Team</a></li>
+        </ul>
+
+    </nav>  
+
+    <section class="title-info">
+
+        <h1>Welcome to KeamN</h1>
+        <p>Your go-to tool for generating balanced League of Legends 5v5 customs, inspired from <a href="https://www.keamk.com/">KeamK.</a></p>
+        
+        <div class="form-wrapper">
+            <form class="form-container">  
+
+                <label for="title">Draw Title</label>
+                <input
+                type="text"
+                id="title"
+                name="title"
+                placeholder="Enter a title"
+                required
+                />
+
+                <div class="team-names">
+                    <div class="team-name">
+                        <label for="teamAName">Team A Name</label>
+                        <input
+                        type="text"
+                        id="teamAName"
+                        name="teamAName"
+                        placeholder="Enter Team A name"
+                        required
+                        />
+                    </div>
+
+                    <div class="team-name">
+                        <label for="teamBName">Team B Name</label>
+                        <input
+                        type="text"
+                        id="teamBName"
+                        name="teamBName"
+                        placeholder="Enter Team B name"
+                        required
+                        />
+                    </div>
+                </div>
+
+                <div id="participants-container"></div>                
+
+                <button type="submit">Generate Teams</button>
+            </form>
+        </div>
+        
+        <div class="import-export">
+            <button type="button" id="exportBtn">Export Teams</button>
+            <button type="button" id="importBtn">Import Teams</button>
+            <input type="text" id="importInput" placeholder="Paste saved configuration here" />
+        </div>
+
+        <div id="results" class="results hidden"></div>
+
+    </section>
+
+</body>
+</html>
