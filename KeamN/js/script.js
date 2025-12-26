@@ -201,16 +201,20 @@ function renderTeam(title, team) {
   return `
     <div class="team">
       <h2>${title}</h2>
-      ${Object.entries(team).map(([role, player]) => `
-        <div class="role-row">
-          <span class="role-name">${role}</span>
-          <span>${player.name}</span>
-          <span class="skill">${player.ratings[role]}</span>
-        </div>
-      `).join("")}
+      ${ROLE_KEYS.map(role => {
+        const player = team[role];
+        return `
+          <div class="role-row">
+            <span class="role-name">${role}</span>
+            <span>${player.name}</span>
+            <span class="skill">${player.ratings[role]}</span>
+          </div>
+        `;
+      }).join("")}
     </div>
   `;
 }
+
 
 
 // Export current participants as a JSON string
