@@ -1,15 +1,33 @@
-const RANDOMNESS_POOL_SIZE = 5; // 1 = lowest randomness, 5-ish = fair
-const RANDOM_FACTOR = 0.001;   // Small random factor to break ties
+import { generateOptimalTeams, ROLE_KEYS } from "./teamAlgorithm.js";
+import { DEFAULT_CONFIG } from "./config.js";
 
-const roles = [
-  { key: "Top", label: "Top" },
-  { key: "Jun", label: "Jungle" },
-  { key: "Mid", label: "Mid" },
-  { key: "Adc", label: "ADC" },
-  { key: "Sup", label: "Support" }
-];
+const roles = ROLE_KEYS;
+const ROLE_LABELS = { Top: "Top", Jun: "Jungle", Mid: "Mid", Adc: "ADC", Sup: "Support" };
 
-const ROLE_KEYS = roles.map(r => r.key);
+// -------------------- Helpers --------------------
+
+function showTooltip(inputEl, message) {
+  // Remove existing tooltip
+  let existing = inputEl.parentElement.querySelector('.tooltip');
+  if (existing) existing.remove();
+
+  // Create new tooltip
+  const tooltip = document.createElement('div');
+  tooltip.className = 'tooltip';
+  tooltip.textContent = message;
+  inputEl.parentElement.appendChild(tooltip);
+
+  // Position tooltip above the input
+  const rect = inputEl.getBoundingClientRect();
+  tooltip.style.top = `${inputEl.offsetTop - tooltip.offsetHeight - 5}px`;
+  tooltip.style.left = `${inputEl.offsetLeft}px`;
+
+  // Show it
+  setTimeout(() => tooltip.classList.add('show'), 10);
+
+  // Remove after 3 seconds
+  setTimeout(() => tooltip.remove(), 3000);
+}
 
 // -------------------- Participant Layout --------------------
 const container = document.getElementById("participants-container");
@@ -24,27 +42,25 @@ for (let p = 1; p <= 10; p++) {
       class="participantText"
       type="text"
       placeholder="Participant ${p}"
-      required
     />
   `;
 
   roles.forEach(role => {
     html += `
       <div class="role">
-        <div class="role-label">${role.label}</div>
+        <div class="role-label">${ROLE_LABELS[role]}</div>
         <div class="radios">
     `;
 
     for (let i = 1; i <= 5; i++) {
       html += `
         <input
-          id="participant${p}_${role.key}${i}"
+          id="participant${p}_${role}${i}"
           type="radio"
-          name="participant${p}${role.key}"
+          name="participant${p}${role}"
           value="${i}"
-          ${i === 1 ? "required" : ""}
         />
-        <label for="participant${p}_${role.key}${i}">${i}</label>
+        <label for="participant${p}_${role}${i}">${i}</label>
       `;
     }
 
@@ -55,103 +71,6 @@ for (let p = 1; p <= 10; p++) {
   container.appendChild(participant);
 }
 
-// -------------------- Team Distribution --------------------
-
-// Shuffle helper
-function shuffle(arr) {
-  return arr.slice().sort(() => Math.random() - 0.5);
-}
-
-// Generate all 5-player combinations from 10 players
-function combinations(arr, size) {
-  if (size === 0) return [[]];
-  if (arr.length < size) return [];
-
-  const [first, ...rest] = arr;
-  const withFirst = combinations(rest, size - 1).map(c => [first, ...c]);
-  const withoutFirst = combinations(rest, size);
-
-  return [...withFirst, ...withoutFirst];
-}
-
-// Generate all permutations of an array
-function permutations(arr) {
-  if (arr.length === 0) return [[]];
-  return arr.flatMap((item, i) =>
-    permutations([...arr.slice(0, i), ...arr.slice(i + 1)]).map(p => [item, ...p])
-  );
-}
-
-// Assign roles to a team with minimal total deviation from midpoint
-function bestRoleAssignment(team) {
-  const perms = shuffle(permutations(ROLE_KEYS));
-  let best = null;
-  let bestScore = Infinity;
-
-  perms.forEach(perm => {
-    const assignment = {};
-    let score = 0;
-
-    for (let i = 0; i < team.length; i++) {
-      const role = perm[i];
-      assignment[role] = team[i];
-      // Score = deviation from midpoint (3) + tiny random factor to break ties
-      score += Math.abs(team[i].ratings[role] - 3) + Math.random() * RANDOM_FACTOR;
-    }
-
-    if (score < bestScore) {
-      bestScore = score;
-      best = assignment;
-    }
-  });
-
-  return best;
-}
-
-// Total role difference between two teams
-function roleDifference(teamA, teamB) {
-  return ROLE_KEYS.reduce(
-    (sum, role) => sum + Math.abs(teamA[role].ratings[role] - teamB[role].ratings[role]),
-    0
-  );
-}
-
-// Pick a solution randomly, weighted by balance
-function weightedRandomPick(solutions) {
-  const weights = solutions.map(s => 1 / (s.diff + 1));
-  const totalWeight = weights.reduce((sum, w) => sum + w, 0);
-  let random = Math.random() * totalWeight;
-
-  for (let i = 0; i < solutions.length; i++) {
-    random -= weights[i];
-    if (random <= 0) return solutions[i];
-  }
-
-  return solutions[0]; // fallback
-}
-
-// Main team generator
-function generateOptimalTeams(players) {
-  const shuffledPlayers = shuffle(players); // prevent bias toward first input
-  const solutions = [];
-  const allSplits = combinations(shuffledPlayers, 5);
-
-  allSplits.forEach(teamAPlayers => {
-    const teamBPlayers = shuffledPlayers.filter(p => !teamAPlayers.includes(p));
-
-    const teamA = bestRoleAssignment(teamAPlayers);
-    const teamB = bestRoleAssignment(teamBPlayers);
-
-    const diff = roleDifference(teamA, teamB);
-    solutions.push({ teamA, teamB, diff });
-  });
-
-  solutions.sort((a, b) => a.diff - b.diff);
-
-  const pool = shuffle(solutions).slice(0, Math.min(RANDOMNESS_POOL_SIZE, solutions.length));
-  return weightedRandomPick(pool);
-}
-
 // -------------------- Form Handling --------------------
 const form = document.querySelector(".form-container");
 const resultsEl = document.getElementById("results");
@@ -159,20 +78,38 @@ const resultsEl = document.getElementById("results");
 form.addEventListener("submit", e => {
   e.preventDefault();
   const players = collectPlayers();
-  const result = generateOptimalTeams(players);
+
+  const config = {
+    ...DEFAULT_CONFIG,
+    iterations: Number(document.getElementById("randomness").value),
+  };
+  console.log("Using config:", config); // optional for debugging
+  
+  const result = generateOptimalTeams(players, config);
   renderTeams(result);
 });
 
 function collectPlayers() {
-  const roles = ROLE_KEYS;
   const players = [];
 
   for (let p = 1; p <= 10; p++) {
     const name = document.getElementById(`participant${p}`).value;
-    const ratings = {};
+    if (!name) {
+      const nameInput = document.getElementById(`participant${p}`);
+      showTooltip(nameInput, `Player ${p} must have a name.`);
+      nameInput.focus();
+      throw new Error(`Validation failed: Player ${p} name is empty`);
+    }
 
+    const ratings = {};
     roles.forEach(role => {
       const checked = document.querySelector(`input[name="participant${p}${role}"]:checked`);
+      if (!checked) {
+        const roleInput = document.getElementsByName(`participant${p}${role}`)[0];
+        showTooltip(roleInput, `Player ${p} must select a rating for ${role}.`);
+        roleInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        throw new Error(`Player ${p} must select a rating for ${role}`);
+      }
       ratings[role] = Number(checked.value);
     });
 
@@ -215,7 +152,7 @@ function renderTeam(title, team) {
   `;
 }
 
-
+// -------------------- Import/Export --------------------
 
 // Export current participants as a JSON string
 const exportBtn = document.getElementById("exportBtn");
@@ -250,3 +187,18 @@ importBtn.addEventListener("click", () => {
     alert("Failed to import configuration. Make sure the format is correct.");
   }
 });
+
+// -------------------- Config UI --------------------
+
+// Randomness slider
+
+const randomnessSlider = document.getElementById("randomness");
+const randomnessValue = document.getElementById("randomnessValue");
+
+// Set initial display
+randomnessValue.textContent = randomnessSlider.value;
+
+randomnessSlider.addEventListener("input", () => {
+  randomnessValue.textContent = randomnessSlider.value;
+});
+
