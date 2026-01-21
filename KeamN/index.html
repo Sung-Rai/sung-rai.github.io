@@ -19,59 +19,41 @@
 
     </nav>  
 
-    <section class="title-info">
+    <section class="app-container">
+        <form class="team-form" id="teamForm">  
+            <div class="form-header">
+                <h1>Welcome to KeamN</h1>
+                <p>Your go-to tool for generating balanced League of Legends 5v5 customs, inspired from <a href="https://www.keamk.com/">KeamK.</a></p>
 
-        <h1>Welcome to KeamN</h1>
-        <p>Your go-to tool for generating balanced League of Legends 5v5 customs, inspired from <a href="https://www.keamk.com/">KeamK.</a></p>
-        
-        <div class="form-wrapper">
-            <form class="form-container">  
-
-                <label for="title">Draw Title</label>
-                <input
-                type="text"
-                id="title"
-                name="title"
-                placeholder="Enter a title"
-                required
-                />
-
-                <div class="team-names">
+                <div class="draw-title-container">
+                    <label for="title">Draw Title</label>
+                    <input type="text" id="title" name="title" placeholder="Enter a title" required/>
+                </div>
+                
+                <div class="team-names-container">
                     <div class="team-name">
                         <label for="teamAName">Team A Name</label>
-                        <input
-                        type="text"
-                        id="teamAName"
-                        name="teamAName"
-                        placeholder="Enter Team A name"
-                        required
-                        />
+                        <input type="text" id="teamAName" name="teamAName" placeholder="Enter Team A name" required/>
                     </div>
-
                     <div class="team-name">
                         <label for="teamBName">Team B Name</label>
-                        <input
-                        type="text"
-                        id="teamBName"
-                        name="teamBName"
-                        placeholder="Enter Team B name"
-                        required
-                        />
+                        <input type="text" id="teamBName" name="teamBName" placeholder="Enter Team B name" required/>
                     </div>
                 </div>
 
-                <div class="config">
+                <div class="depth-container">
                     <label>
                         Depth (Higher is better but slower): <span id="randomnessValue">50000</span>
                         <input type="range" min="1" max="100000" id="randomness" value="50000" /> <!-- Can technically go up to 10 factorial?-->
                     </label>
                 </div>
+            
+            </div>
 
-                <div id="participants-container"></div>                
+            <div id="participants-container"></div>                
 
-                <button type="submit">Generate Teams</button>
-            </form>
-        </div>
+            <button type="submit">Generate Teams</button>
+        </form>
         
         <div class="import-export">
             <button type="button" id="exportBtn">Export Teams</button>

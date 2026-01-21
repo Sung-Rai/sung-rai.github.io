@@ -1,9 +1,11 @@
-export const ROLE_KEYS = ["Top", "Jun", "Mid", "Adc", "Sup"];
-
 /*
 Solution representation:
 Map of player index → { team: "A" | "B", role }
 */
+
+// -------------------- Exports --------------------
+
+export const ROLE_KEYS = ["Top", "Jun", "Mid", "Adc", "Sup"];
 
 // -------------------- Utility --------------------
 

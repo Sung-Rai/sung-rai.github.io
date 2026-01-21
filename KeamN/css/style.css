@@ -1,6 +1,7 @@
 /* -------------------- Variables -------------------- */
 :root {
     --dark-color-1: #1e293b;
+    --dark-color-1-soft: #2a3852;
     --dark-color-2: #6c6d70;
     --light-color-1: #f5f5f5;
     --blue-color-1: #3b82f6;
@@ -53,241 +54,61 @@ body {
     color: var(--light-color-1);
 }
 
-/* -------------------- Title -------------------- */
-.title-info {
-    text-align: center;
-    background-color: var(--dark-color-2);
-    color: var(--light-color-1);
-    padding: 3rem;
-}
+/* -------------------- Form Header -------------------- */
 
-.draw-title {
-    text-align: center;
-    margin-top: 10rem;
-    margin-bottom: 2rem;
-    font-size: 1.8rem;
-    color: var(--light-color-1);
-}
-
-/* -------------------- Form -------------------- */
-.form-wrapper {
-    display: flex;
-    justify-content: center;
-    margin-top: 3rem;
-}
-
-.form-container {
+.form-header {
+    background-color: var(--dark-color-1-soft);
     padding: 2rem;
-    width: 80%;
-    border-radius: 8px;
-}
-
-.form-container label {
-    display: block;
-    margin-bottom: 0.5rem;
-    font-weight: bold;
-    text-align: left;
-}
-
-.form-container input {
-    padding: 0.6rem;
-    margin-bottom: 1.2rem;
-    border: 1px solid #d1d5db;
-    border-radius: 4px;
-    font-size: 1rem;
-}
-
-#title {
-    width: 100%;
-    margin-bottom: 5rem;
-}
-
-/* -------------------- Participants section -------------------- */
-.form-container .participants {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 1.5rem 0;
-}
-
-.form-container .participantText {
-    width: 35%;
-    position: relative;
-}
-
-/* Role radios */
-.form-container .radios {
-    display: flex;
-    margin-bottom: 1.2rem;
-    width: 13%;
-}
-
-.form-container .radios input[type="radio"] {
-    display: none;
-}
-
-.form-container .radios label {
-    padding: 0.6rem 0.8rem;
-    cursor: pointer;
-    font-weight: normal;
-    margin: 0;
-    background-color: var(--light-color-1);
-    color: var(--dark-color-1);
-    height: 100%;
-}
-
-.form-container .radios input[type="radio"]:checked + label {
-    background-color: var(--blue-color-1);
-    color: white;
-    border-color: var(--blue-color-1);
-}
-
-.role {
-    position: relative;
-    width: 13%;
-}
-
-.role-label {
-    position: absolute;
-    top: -1.2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 0.85rem;
-    font-weight: bold;
+    margin-bottom: 2rem;
     color: var(--light-color-1);
-    pointer-events: none;
-    white-space: nowrap;
-}
-
-/* -------------------- Form Buttons -------------------- */
-.form-container button {
-    width: 40%;
-    padding: 1.5rem;
-    background-color: var(--blue-color-1);
-    border: none;
-    color: var(--light-color-1);
-    font-size: 1rem;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.form-container button:hover {
-    background-color: var(--blue-color-1);
-}
-
-/* -------------------- Config -------------------- */
-.config {
-    margin-bottom: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-}
-
-.config label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: normal;
-}
-
-.config input[type="range"] {
-    flex: 1;
-}
-
-#randomnessValue {
-    display: inline-block;
-    width: 6ch;
-    text-align: right;
-}
-
-#randomness{
-    margin-top: 1em;
-}
-
-/* -------------------- Results -------------------- */
-.results {
-    margin-top: 3rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
-}
-
-.results.hidden {
-    display: none;
-}
-
-.results .teams-container {
-    display: flex;
-    justify-content: center;
-    gap: 3rem;
-    width: 100%;
-}
-
-.team {
-    background: white;
-    color: var(--dark-color-1);
-    padding: 1.5rem;
-    border-radius: 8px;
-    width: 300px;
-}
-
-.team h2 {
     text-align: center;
-    margin-bottom: 1rem;
+    gap: 1rem;
 }
 
-.role-row {
+.draw-title-container {
+    margin-top: 2.5rem;
     display: flex;
-    justify-content: space-between;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid #e5e7eb;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    max-width: 600px;
 }
 
-.role-row:last-child {
-    border-bottom: none;
+.draw-title-container input {
+    width: 100%;
+    margin-top: 0.5rem;
 }
 
-.role-name {
-    font-weight: bold;
+.team-names-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 500px;
+    gap: 0.5rem;
 }
 
-.skill {
-    color: var(--dark-color-2);
-}
-
-/* -------------------- Team Name Inputs -------------------- */
 .team-names {
     display: flex;
     gap: 1rem;
-    justify-content: center;
-    margin-bottom: 1.5rem;
-}
-
-.team-name {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-
-.team-name input {
     width: 100%;
 }
 
-/* -------------------- Tooltip -------------------- */
-.tooltip {
-    position: absolute;
-    background: #f44336;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    white-space: nowrap;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.2s ease;
+.team-name {
+    flex: 1;
 }
 
-.tooltip.show {
-    opacity: 1;
+.team-name .input {
+    width: 100%;
+}
+
+.depth-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 500px;
 }
