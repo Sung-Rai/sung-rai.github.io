@@ -1,0 +1,266 @@
+/* -------------------- Variables -------------------- */
+:root {
+    --dark-color-1: #1e293b;
+    --dark-color-1-soft: #2a3852;
+    --dark-color-2: #6c6d70;
+    --light-color-1: #f5f5f5;
+    --blue-color-1: #3b82f6;
+    --blue-color-1-soft: #b1c4d8;
+}
+
+/* -------------------- Globals -------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    background-color: var(--blue-color-1-soft);
+}
+
+/* -------------------- Nav -------------------- */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: var(--dark-color-1);
+}
+
+.nav-logo {
+    color: var(--light-color-1);
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    gap: 1.5rem;
+}
+
+.nav-links a {
+    text-decoration: none;
+    color: var(--light-color-1);
+    font-size: 1rem;
+    padding: 0.75rem;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.nav-links a:hover {
+    background-color: var(--blue-color-1);
+    color: var(--light-color-1);
+}
+
+/* -------------------- Title -------------------- */
+.title-info {
+    text-align: center;
+    background-color: var(--dark-color-1-soft);
+    color: var(--light-color-1);
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+}
+
+/* -------------------- Form -------------------- */
+.form-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+    text-align: center;
+    padding: 3rem;
+}
+
+.form-container {
+    padding: 2rem;
+    width: 80%;
+}
+
+.form-container label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+    text-align: left;
+}
+
+#title {
+    width: 100%;
+    margin-bottom: 5rem;
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.selector {
+    padding: 0.4rem;
+    font-size: 0.9rem;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    background: white;
+}
+
+
+/* -------------------- Rating Slider -------------------- */
+
+.shared-line {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: #d1d5db;
+  border-radius: 3px;
+  margin: 2rem 0;
+}
+
+.participant-dot {
+  position: absolute;
+  top: -8px;
+  width: 18px;
+  height: 18px;
+  background: var(--blue-color-1);
+  border-radius: 50%;
+  cursor: pointer;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.participant-dot:hover {
+  z-index: 10;
+}
+
+.participant-dot::after {
+  content: attr(data-name);
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  color: white;
+  white-space: nowrap;
+}
+
+.participants-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-top: 1rem;
+    justify-content: center;
+}
+
+.participant-row {
+    display: flex;
+    align-items: center;
+    background: #f3f4f6;
+    font-size: 0.85rem;
+    border-radius: 6px;
+}
+
+
+.participant-row input.participant-name {
+    flex: 1;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.9rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+}
+
+.participant-row input.participant-color {
+    width: 32px;
+    height: 32px;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.participant-row span {
+    width: 30px;
+    text-align: center;
+    font-weight: bold;
+}
+
+#participants-container {
+    width: 100%;
+    padding: 100px 0px;
+}
+
+/* -------------------- Results -------------------- */
+.results {
+    margin-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.results.hidden {
+    display: none;
+}
+
+.teams-container {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.team {
+    background: white;
+    color: var(--dark-color-1);
+    padding: 1.5rem;
+    border-radius: 8px;
+    width: 300px;
+}
+
+.team h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.role-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.role-row:last-child {
+    border-bottom: none;
+}
+
+.role-name {
+    font-weight: bold;
+}
+
+.skill {
+    color: var(--dark-color-2);
+}
+
+/* -------------------- Team Name Inputs -------------------- */
+.team-names {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.team-name {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.team-name input {
+    width: 100%;
+}
