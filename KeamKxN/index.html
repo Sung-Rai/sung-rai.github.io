@@ -23,60 +23,67 @@
 
     <section class="form-wrapper">
         <form class="form-container">  
-            <label for="title">Draw Title</label>
-            <input
-            type="text"
-            id="title"
-            name="title"
-            placeholder="Enter a title"
-            required
-            />
+            
+            <div class="naming-container full-bleed">
+                <label for="title">Draw Title</label>
+                <input
+                type="text"
+                id="title"
+                name="title"
+                placeholder="Enter a title"
+                required
+                />
 
-            <div class="team-names">
-                <div class="team-name">
-                    <label for="teamAName">Team A Name</label>
-                    <input
-                    type="text"
-                    id="teamAName"
-                    name="teamAName"
-                    placeholder="Enter Team A name"
-                    required
-                    />
-                </div>
+                <div class="team-names">
+                    <div class="team-name">
+                        <label for="teamAName">Team A Name</label>
+                        <input
+                        type="text"
+                        id="teamAName"
+                        name="teamAName"
+                        placeholder="Enter Team A name"
+                        required
+                        />
+                    </div>
 
-                <div class="team-name">
-                    <label for="teamBName">Team B Name</label>
-                    <input
-                    type="text"
-                    id="teamBName"
-                    name="teamBName"
-                    placeholder="Enter Team B name"
-                    required
-                    />
+                    <div class="team-name">
+                        <label for="teamBName">Team B Name</label>
+                        <input
+                        type="text"
+                        id="teamBName"
+                        name="teamBName"
+                        placeholder="Enter Team B name"
+                        required
+                        />
+                    </div>
                 </div>
             </div>
     
 
-            <div id="participants-container">
-                <div class="shared-line">
-                    <!-- participant generated here -->
-                </div>
+            <div class="participants-bg full-bleed">
+                <div id="participants-container">
+                    <div class="shared-line">
+                        <!-- participant generated here -->
+                    </div>
 
-                <div class="participants-list">
-                    <!-- names + values generated here -->
+                    <div class="participants-list">
+                        <!-- names + values generated here -->
+                    </div>
                 </div>
             </div>
 
-            <div class="form-actions">
-                <select class="selector" id="topNSelect">
-                    <option value="1">Optimal</option>
-                    <option value="64">Consistent</option>
-                    <option value="128" selected>Fair</option>
-                    <option value="192">Wild</option>
-                    <option value="256">Chaos</option>
-                </select>
+            <div class="form-actions-bg full-bleed">
+                <div class="form-actions">
+                    <select class="selector" id="topNSelect">
+                        <option value="1">Optimal</option>
+                        <option value="64">Consistent</option>
+                        <option value="128" selected>Fair</option>
+                        <option value="192">Wild</option>
+                        <option value="256">Chaos</option>
+                    </select>
 
-                <button class="selector" type="submit">Generate Teams</button>
+                    <button class="selector" type="submit">Generate Teams</button>
+                </div>
             </div>
         </form>
     </section>

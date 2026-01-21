@@ -8,16 +8,17 @@
     --blue-color-1-soft: #b1c4d8;
 }
 
+.full-bleed {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+}
+
 /* -------------------- Globals -------------------- */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: Arial, Helvetica, sans-serif;
-}
-
-body {
-    background-color: var(--blue-color-1-soft);
 }
 
 /* -------------------- Nav -------------------- */
@@ -64,7 +65,6 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    text-align: center;
     gap: 1rem;
 }
 
@@ -72,14 +72,25 @@ body {
 .form-wrapper {
     display: flex;
     justify-content: center;
-    margin-top: 3rem;
-    text-align: center;
-    padding: 3rem;
+    padding: 0 3rem;
 }
 
 .form-container {
-    padding: 2rem;
+    padding: 0 2rem;
     width: 80%;
+}
+
+.naming-container {
+    background-color: var(--dark-color-1-soft);
+    padding: 2rem 4rem;
+    color: var(--light-color-1);
+}
+
+.naming-container input {
+    padding: 0.3rem 0.5rem;
+    font-size: 1.5rem;
+    border: 0;
+    border-radius: 4px;
 }
 
 .form-container label {
@@ -94,20 +105,28 @@ body {
     margin-bottom: 5rem;
 }
 
+.form-actions-bg {
+    background-color: var(--dark-color-1-soft);
+    padding: 3rem 0;
+}
+
 .form-actions {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 1rem;
-    margin-top: 1.5rem;
 }
 
 .selector {
     padding: 0.4rem;
     font-size: 0.9rem;
     border-radius: 6px;
-    border: 1px solid #d1d5db;
-    background: white;
+    border: 0;
+    background: var(--light-color-1);
+}
+
+button:hover {
+    cursor: pointer;
 }
 
 
@@ -117,7 +136,7 @@ body {
   position: relative;
   width: 100%;
   height: 6px;
-  background: #d1d5db;
+  background: var(--light-color-1);
   border-radius: 3px;
   margin: 2rem 0;
 }
@@ -145,7 +164,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   font-size: 0.7rem;
-  color: white;
+  color: var(--dark-color-1);
   white-space: nowrap;
 }
 
@@ -162,7 +181,7 @@ body {
     align-items: center;
     background: #f3f4f6;
     font-size: 0.85rem;
-    border-radius: 6px;
+    border-radius: 3px;
 }
 
 
@@ -170,7 +189,7 @@ body {
     flex: 1;
     padding: 0.3rem 0.5rem;
     font-size: 0.9rem;
-    border: 1px solid #d1d5db;
+    border: 0;
     border-radius: 4px;
 }
 
@@ -189,14 +208,19 @@ body {
     font-weight: bold;
 }
 
+.participants-bg {
+    background-color: var(--blue-color-1-soft);
+    padding: 2rem 0;
+}
+
 #participants-container {
-    width: 100%;
-    padding: 100px 0px;
+    width: 80%;
+    margin: 0 auto;
+    padding: 2rem 0;
 }
 
 /* -------------------- Results -------------------- */
 .results {
-    margin-top: 3rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -213,10 +237,12 @@ body {
     gap: 3rem;
     width: 100%;
     flex-wrap: wrap;
+    background-color: var(--dark-color-1-soft);
+    padding: 5rem 0;
 }
 
 .team {
-    background: white;
+    background: var(--light-color-1);
     color: var(--dark-color-1);
     padding: 1.5rem;
     border-radius: 8px;
@@ -245,6 +271,16 @@ body {
 
 .skill {
     color: var(--dark-color-2);
+}
+
+.total-row {
+    color: var(--blue-color-1);
+    border-top: #1e293b 2px solid;
+}
+
+.total-row span {
+    font-weight: bold;
+    color: var(--dark-color-1);
 }
 
 /* -------------------- Team Name Inputs -------------------- */
