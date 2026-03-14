@@ -290,6 +290,7 @@ function createParticipant(p) {
     const index = participants.findIndex(ap => ap.id === p.id);
     if (index !== -1) participants.splice(index, 1);
     refreshSlider();
+    renderSavedPlayers();
   });
 
 row.appendChild(removeBtn);
