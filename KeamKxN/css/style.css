@@ -129,6 +129,87 @@ button:hover {
     cursor: pointer;
 }
 
+/* -------------------- Saved Players -------------------- */
+
+#toggle-saved-btn {
+    display: block;
+    margin: 0 auto 1rem auto;
+    padding: 0.5rem 5rem;
+    font-size: 1rem;
+    border: 1px solid var(--dark-color-1);
+    border-radius: 4px;
+    background: none;
+}
+
+.player-manager{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--blue-color-1-soft);
+    padding: 2rem 0;
+}
+
+#saved-players-list {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  max-height: 0; /* collapsed by default */
+}
+
+#saved-players-list.expanded {
+  max-height: 200vw; /* large enough to fit all content */
+}
+
+.saved-players-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: center;
+}
+
+.add-player-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 4px;
+}
+
+.newPlayerInput {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.9rem;
+    border: 0;
+    border-radius: 4px;
+}
+
+.saved-player-row,
+.saved-preset-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* pushes buttons to the right */
+  padding: 0.4rem 0.6rem;
+  background: none;
+  font-size: 0.85rem;
+  border-radius: 3px;
+  gap: 0.5rem;
+}
+
+.player-controls,
+.preset-controls {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.saved-player-row span:first-child {
+  width: 20px; /* color dot */
+}
+
+.saved-player-row span:nth-child(2) {
+  flex: 1; /* player name takes remaining space */
+}
+
+.saved-player-row span:nth-child(3) {
+  width: 40px; /* rating */
+}
 
 /* -------------------- Rating Slider -------------------- */
 
@@ -219,6 +300,15 @@ button:hover {
     padding: 2rem 0;
 }
 
+.remove-player-btn {
+    background: transparent;
+    border: none;
+    color: var(--dark-color-2);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 0.5rem;
+}
+
 /* -------------------- Results -------------------- */
 .results {
     display: flex;
@@ -299,4 +389,42 @@ button:hover {
 
 .team-name input {
     width: 100%;
+}
+
+/* -------------------- Presets Manager -------------------- */
+
+.preset-buttons {
+    display: flex;
+    gap: 1rem;       /* space between buttons */
+    justify-content: center; /* center them horizontally */
+    margin-bottom: 1rem;
+}
+
+#saved-presets-list {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  max-height: 0; /* collapsed by default */
+}
+
+#saved-presets-list.expanded {
+  max-height: 500px; /* adjust as needed */
+}
+
+.presets-manager {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--blue-color-1-soft);
+    padding-bottom: 2rem;
+}
+
+#toggle-presets-btn {
+    display: block;
+    margin: 0 auto 1rem auto;
+    padding: 0.5rem 5rem;
+    font-size: 1rem;
+    border: 1px solid var(--dark-color-1);
+    border-radius: 4px;
+    background: none;
 }

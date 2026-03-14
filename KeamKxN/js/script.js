@@ -1,16 +1,181 @@
 import { ROLE_KEYS, generateOptimalTeams } from './teamAlgorithm.js';
 // -------------------- Rating slider --------------------
 
-const participants = Array.from({ length: 10 }, (_, i) => ({
-  id: i + 1,
-  name: `Player ${i + 1}`,
-  value: 10 + i * 8,
-  color: ["#3b82f6","#ef4444","#facc15","#10b981","#8b5cf6","#f97316","#ec4899","#22d3ee","#a3e635","#f43f5e"][i] // optional default colors
-}));
+const participants = [];
 
 
 const line = document.querySelector(".shared-line");
 const list = document.querySelector(".participants-list");
+
+// -------------------- Player Management --------------------
+
+const STORAGE_KEY = "keam_players";
+
+function loadSavedPlayers() {
+  const data = localStorage.getItem(STORAGE_KEY);
+  return data ? JSON.parse(data) : [];
+}
+
+function savePlayers(players) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(players));
+}
+
+function renderSavedPlayers() {
+  const container = document.getElementById("saved-players-list");
+  container.innerHTML = "";
+
+
+  const players = loadSavedPlayers();
+
+  players.forEach(p => {
+    const row = document.createElement("div");
+    row.className = "saved-player-row";
+    const isUsed = participants.some(ap => ap.id === p.id);
+
+    row.innerHTML = `
+    <span style="color:${p.color}">●</span>
+    <span>${p.name}</span>
+    <span>(${p.value ?? 50})</span>
+
+    <span class="player-controls">
+      <button data-id="${p.id}" type="button" class="add-to-team selector" ${isUsed ? "disabled" : ""}>
+        Use
+      </button>
+
+      <button data-id="${p.id}" type="button" class="delete-player selector">
+        Delete
+      </button>
+    </span>
+    `;
+
+    container.appendChild(row);
+  });
+}
+
+// Toggle saved players list
+
+const toggleBtn = document.getElementById("toggle-saved-btn");
+const savedList = document.getElementById("saved-players-list");
+
+toggleBtn.addEventListener("click", () => {
+  savedList.classList.toggle("expanded");
+  if (savedList.classList.contains("expanded")) {
+    toggleBtn.textContent = "Saved Players ▲";
+  } else {
+    toggleBtn.textContent = "Saved Players ▼";
+  }
+});
+
+document.getElementById("savePlayerBtn").addEventListener("click", () => {
+
+  const nameInput = document.getElementById("newPlayerName");
+  const ratingInput = document.getElementById("newPlayerRating");
+  const colorInput = document.getElementById("newPlayerColor");
+
+  const players = loadSavedPlayers();
+
+  if (!nameInput.value.trim()) return;
+
+  const rating = ratingInput.value ? Number(ratingInput.value) : 50;
+
+  const newPlayer = {
+    id: Date.now(),
+    name: nameInput.value,
+    value: rating,
+    color: colorInput.value
+  };
+
+  players.push(newPlayer);
+  savePlayers(players);
+
+  nameInput.value = "";
+  ratingInput.value = "";
+  colorInput.value = "#3b82f6";
+
+  renderSavedPlayers();
+});
+
+document.getElementById("addPlayerBtn").addEventListener("click", () => {
+
+  if (participants.length >= 10) {
+    alert("You can only add 10 players.");
+    return;
+  }
+
+  const nameInput = document.getElementById("newPlayerName");
+  const ratingInput = document.getElementById("newPlayerRating");
+  const colorInput = document.getElementById("newPlayerColor");
+
+  if (!nameInput.value.trim()) return;
+
+  const rating = ratingInput.value ? Number(ratingInput.value) : 50;
+
+  const newPlayer = {
+    id: Date.now(),
+    name: nameInput.value,
+    value: rating,
+    color: colorInput.value || "#3b82f6"
+  };
+
+  // Add to participants (numberline)
+  participants.push(newPlayer);
+  refreshSlider();
+
+  // Do NOT clear inputs
+});
+
+function refreshSlider() {
+
+  line.innerHTML = "";
+  list.innerHTML = "";
+
+  participants.forEach(createParticipant);
+}
+
+document.addEventListener("click", e => {
+
+  // Delete saved player
+  if (e.target.classList.contains("delete-player")) {
+
+    const id = Number(e.target.dataset.id);
+
+    let players = loadSavedPlayers();
+    players = players.filter(p => p.id !== id);
+
+    savePlayers(players);
+    renderSavedPlayers();
+
+    return;
+  }
+
+  if (!e.target.classList.contains("add-to-team")) return;
+
+  if (participants.length >= 10) {
+    alert("You can only select 10 players.");
+    return;
+  }
+
+  const id = Number(e.target.dataset.id);
+  const players = loadSavedPlayers();
+
+  const player = players.find(p => p.id === id);
+  if (!player) return;
+
+  if (participants.some(p => p.id === id)) {
+    alert("Player already selected.");
+  return;
+  }
+
+  participants.push({
+    ...player,
+    value: player.value ?? 50
+  });
+
+  refreshSlider();
+  renderSavedPlayers();
+});
+
+// ----------------- Participant numberline -----------------
 
 function enableDrag(dot, participant) {
   dot.addEventListener("pointerdown", e => {
@@ -26,7 +191,8 @@ function enableDrag(dot, participant) {
       const value = Math.round((x / rect.width) * 100);
       participant.value = value;
 
-      document.getElementById(`value-${participant.id}`).textContent = value;
+      const el = document.getElementById(`value-${participant.id}`);
+      if (el) el.textContent = value;
     }
 
     function up(e) {
@@ -51,8 +217,18 @@ function repositionAllDots() {
 }
 
 window.addEventListener("load", () => {
-  participants.forEach(createParticipant);
+  const saved = loadSavedPlayers();
+
+  if (saved.length === 0) {
+    savePlayers([
+      { id: Date.now()+1, name: "Lemon", color: "#f6f33b" },
+      { id: Date.now()+2, name: "Lime", color: "#4aef44" }
+    ]);
+  }
+
+  renderSavedPlayers();
 });
+
 window.addEventListener("resize", repositionAllDots); // Helps with when resizing window
 function positionDot(dot, value) {
   const rect = line.getBoundingClientRect();
@@ -104,6 +280,19 @@ function createParticipant(p) {
   row.appendChild(valueSpan);
 
   list.appendChild(row);
+
+  // Remove button
+  const removeBtn = document.createElement("button");
+  removeBtn.textContent = "✕";
+  removeBtn.className = "remove-player-btn";
+
+  removeBtn.addEventListener("click", () => {
+    const index = participants.findIndex(ap => ap.id === p.id);
+    if (index !== -1) participants.splice(index, 1);
+    refreshSlider();
+  });
+
+row.appendChild(removeBtn);
 
   // Position dot and enable dragging
   positionDot(dot, p.value);
@@ -177,9 +366,6 @@ function displayTeams(players, solution) {
 // -------------------- Team Generation --------------------
 
 function generatePlayersFromSliders() {
-  const values = participants.map(p => p.value);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
 
   return participants.map((p) => {
     return {
@@ -197,6 +383,11 @@ const form = document.querySelector(".form-container");
 form.addEventListener("submit", e => {
   e.preventDefault();
 
+  if (participants.length !== 10) {
+    alert("You must select exactly 10 players.");
+    return;
+  }
+  
   const players = generatePlayersFromSliders();
 
   // Get topN from dropdown
@@ -207,6 +398,151 @@ form.addEventListener("submit", e => {
   const finalSolution = generateOptimalTeams(players, { topN });
 
   displayTeams(players, finalSolution);
+});
+
+// -------------------- Preset Management --------------------
+
+// Toggle preset players list
+
+const presetBtn = document.getElementById("toggle-presets-btn");
+const presetList = document.getElementById("saved-presets-list");
+
+presetBtn.addEventListener("click", () => {
+  presetList.classList.toggle("expanded");
+  if (presetList.classList.contains("expanded")) {
+    presetBtn.textContent = "Saved Presets ▲";
+  } else {
+    presetBtn.textContent = "Saved Presets ▼";
+  }
+});
+
+const PRESET_KEY = "keam_presets";
+
+function loadSavedPresets() {
+  const data = localStorage.getItem(PRESET_KEY);
+  return data ? JSON.parse(data) : [];
+}
+
+function savePresets(presets) {
+  localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
+}
+
+function renderSavedPresets() {
+  const container = document.getElementById("saved-presets-list");
+  container.innerHTML = "";
+
+  const presets = loadSavedPresets();
+
+  presets.forEach((preset, index) => {
+    const row = document.createElement("div");
+    row.className = "saved-preset-row";
+
+    row.innerHTML = `
+      <span>${preset.name}</span>
+      <span class="preset-controls">
+        <button data-index="${index}" type="button" class="load-preset-btn selector">Load</button>
+        ${preset.default ? "" : `<button data-index="${index}" type="button" class="delete-preset-btn selector">Delete</button>`}
+      </span>
+    `;
+
+    container.appendChild(row);
+  });
+}
+
+// Default Preset
+function ensureDefaultPreset() {
+  let presets = loadSavedPresets();
+  const hasDefault = presets.some(p => p.default);
+
+  if (!hasDefault) {
+    // create 10 evenly spaced default players
+    const defaultPlayers = Array.from({ length: 10 }, (_, i) => ({
+      id: Date.now() + i,
+      name: `Player ${i + 1}`,
+      value: Math.round((i + 1) * 100 / 11), // evenly spaced from ~9 to ~91
+      color: ["#3b82f6","#ef4444","#facc15","#10b981","#8b5cf6","#f97316","#ec4899","#22d3ee","#a3e635","#f43f5e"][i]
+    }));
+
+    const defaultPreset = {
+      name: "Default Preset",
+      default: true,
+      players: defaultPlayers
+    };
+
+    presets.unshift(defaultPreset);
+    savePresets(presets);
+  }
+
+  renderSavedPresets();
+}
+
+// Clear numberline
+document.getElementById("clearNumberlineBtn").addEventListener("click", () => {
+    if (participants.length === 0) return; // nothing to clear
+
+    if (!confirm("Are you sure you want to clear the numberline?")) return;
+
+    participants.length = 0; // clear all players
+    refreshSlider();
+});
+
+// Save Current Numberline as Preset
+document.getElementById("savePresetBtn").addEventListener("click", () => {
+
+  if (participants.length !== 10) {
+    alert("You must have exactly 10 players on the numberline to save a preset.");
+    return;
+  }
+
+  const presetName = prompt("Enter a name for this preset:");
+  if (!presetName) return;
+
+  const presetPlayers = participants.map(p => ({
+    id: p.id,
+    name: p.name,
+    value: p.value,
+    color: p.color
+  }));
+
+  const presets = loadSavedPresets();
+  presets.push({ name: presetName, default: false, players: presetPlayers });
+  savePresets(presets);
+
+  renderSavedPresets();
+});
+
+// Handle Preset Load/Delete
+document.addEventListener("click", (e) => {
+
+  // Load preset
+  if (e.target.classList.contains("load-preset-btn")) {
+    const index = Number(e.target.dataset.index);
+    const presets = loadSavedPresets();
+    const preset = presets[index];
+
+    if (!preset) return;
+
+    participants.length = 0; // clear current numberline
+    preset.players.forEach(p => participants.push({...p})); // copy players
+    refreshSlider();
+    return;
+  }
+
+  // Delete preset
+  if (e.target.classList.contains("delete-preset-btn")) {
+    const index = Number(e.target.dataset.index);
+    let presets = loadSavedPresets();
+    presets = presets.filter((_, i) => i !== index);
+    savePresets(presets);
+    renderSavedPresets();
+    return;
+  }
+
+});
+
+// -------------------- Initialize --------------------
+window.addEventListener("load", () => {
+  ensureDefaultPreset();
 });
 
 // -------------------- Share Results --------------------
