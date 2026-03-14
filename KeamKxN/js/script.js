@@ -221,8 +221,8 @@ window.addEventListener("load", () => {
 
   if (saved.length === 0) {
     savePlayers([
-      { id: Date.now()+1, name: "Player 1", color: "#3b82f6" },
-      { id: Date.now()+2, name: "Player 2", color: "#ef4444" }
+      { id: Date.now()+1, name: "Lemon", color: "#f6f33b" },
+      { id: Date.now()+2, name: "Lime", color: "#4aef44" }
     ]);
   }
 
@@ -398,6 +398,151 @@ form.addEventListener("submit", e => {
   const finalSolution = generateOptimalTeams(players, { topN });
 
   displayTeams(players, finalSolution);
+});
+
+// -------------------- Preset Management --------------------
+
+// Toggle preset players list
+
+const presetBtn = document.getElementById("toggle-presets-btn");
+const presetList = document.getElementById("saved-presets-list");
+
+presetBtn.addEventListener("click", () => {
+  presetList.classList.toggle("expanded");
+  if (presetList.classList.contains("expanded")) {
+    presetBtn.textContent = "Saved Presets ▲";
+  } else {
+    presetBtn.textContent = "Saved Presets ▼";
+  }
+});
+
+const PRESET_KEY = "keam_presets";
+
+function loadSavedPresets() {
+  const data = localStorage.getItem(PRESET_KEY);
+  return data ? JSON.parse(data) : [];
+}
+
+function savePresets(presets) {
+  localStorage.setItem(PRESET_KEY, JSON.stringify(presets));
+}
+
+function renderSavedPresets() {
+  const container = document.getElementById("saved-presets-list");
+  container.innerHTML = "";
+
+  const presets = loadSavedPresets();
+
+  presets.forEach((preset, index) => {
+    const row = document.createElement("div");
+    row.className = "saved-preset-row";
+
+    row.innerHTML = `
+      <span>${preset.name}</span>
+      <span class="preset-controls">
+        <button data-index="${index}" type="button" class="load-preset-btn selector">Load</button>
+        ${preset.default ? "" : `<button data-index="${index}" type="button" class="delete-preset-btn selector">Delete</button>`}
+      </span>
+    `;
+
+    container.appendChild(row);
+  });
+}
+
+// Default Preset
+function ensureDefaultPreset() {
+  let presets = loadSavedPresets();
+  const hasDefault = presets.some(p => p.default);
+
+  if (!hasDefault) {
+    // create 10 evenly spaced default players
+    const defaultPlayers = Array.from({ length: 10 }, (_, i) => ({
+      id: Date.now() + i,
+      name: `Player ${i + 1}`,
+      value: Math.round((i + 1) * 100 / 11), // evenly spaced from ~9 to ~91
+      color: ["#3b82f6","#ef4444","#facc15","#10b981","#8b5cf6","#f97316","#ec4899","#22d3ee","#a3e635","#f43f5e"][i]
+    }));
+
+    const defaultPreset = {
+      name: "Default Preset",
+      default: true,
+      players: defaultPlayers
+    };
+
+    presets.unshift(defaultPreset);
+    savePresets(presets);
+  }
+
+  renderSavedPresets();
+}
+
+// Clear numberline
+document.getElementById("clearNumberlineBtn").addEventListener("click", () => {
+    if (participants.length === 0) return; // nothing to clear
+
+    if (!confirm("Are you sure you want to clear the numberline?")) return;
+
+    participants.length = 0; // clear all players
+    refreshSlider();
+});
+
+// Save Current Numberline as Preset
+document.getElementById("savePresetBtn").addEventListener("click", () => {
+
+  if (participants.length !== 10) {
+    alert("You must have exactly 10 players on the numberline to save a preset.");
+    return;
+  }
+
+  const presetName = prompt("Enter a name for this preset:");
+  if (!presetName) return;
+
+  const presetPlayers = participants.map(p => ({
+    id: p.id,
+    name: p.name,
+    value: p.value,
+    color: p.color
+  }));
+
+  const presets = loadSavedPresets();
+  presets.push({ name: presetName, default: false, players: presetPlayers });
+  savePresets(presets);
+
+  renderSavedPresets();
+});
+
+// Handle Preset Load/Delete
+document.addEventListener("click", (e) => {
+
+  // Load preset
+  if (e.target.classList.contains("load-preset-btn")) {
+    const index = Number(e.target.dataset.index);
+    const presets = loadSavedPresets();
+    const preset = presets[index];
+
+    if (!preset) return;
+
+    participants.length = 0; // clear current numberline
+    preset.players.forEach(p => participants.push({...p})); // copy players
+    refreshSlider();
+    return;
+  }
+
+  // Delete preset
+  if (e.target.classList.contains("delete-preset-btn")) {
+    const index = Number(e.target.dataset.index);
+    let presets = loadSavedPresets();
+    presets = presets.filter((_, i) => i !== index);
+    savePresets(presets);
+    renderSavedPresets();
+    return;
+  }
+
+});
+
+// -------------------- Initialize --------------------
+window.addEventListener("load", () => {
+  ensureDefaultPreset();
 });
 
 // -------------------- Share Results --------------------
