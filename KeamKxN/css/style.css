@@ -129,6 +129,62 @@ button:hover {
     cursor: pointer;
 }
 
+/* -------------------- Saved Players -------------------- */
+
+#toggle-saved-btn {
+    display: block;
+    margin: 0 auto 1rem auto;
+    padding: 0.5rem 5rem;
+    font-size: 1rem;
+    border: 1px solid var(--dark-color-1);
+    border-radius: 4px;
+    background: none;
+}
+
+.player-manager{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    background-color: var(--blue-color-1-soft);
+    padding: 2rem 0;
+}
+
+#saved-players-list {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  max-height: 0; /* collapsed by default */
+}
+
+#saved-players-list.expanded {
+  max-height: 200vw; /* large enough to fit all content */
+}
+
+.saved-players-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    justify-content: center;
+}
+
+.add-player-form {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    padding: 4px;
+}
+
+.newPlayerInput {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.9rem;
+    border: 0;
+    border-radius: 4px;
+}
+
+
+.player-controls button {
+  margin-left: 4px;
+}
 
 /* -------------------- Rating Slider -------------------- */
 
@@ -217,6 +273,15 @@ button:hover {
     width: 80%;
     margin: 0 auto;
     padding: 2rem 0;
+}
+
+.remove-player-btn {
+    background: transparent;
+    border: none;
+    color: var(--dark-color-2);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 0.5rem;
 }
 
 /* -------------------- Results -------------------- */
