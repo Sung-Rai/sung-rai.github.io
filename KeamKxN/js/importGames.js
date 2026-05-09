@@ -32,7 +32,8 @@ async function loadPresetGames() {
   throw new Error("Preset file must contain a games array.");
 }
 
-export function setupGameImport() {
+export function setupGameImport(options = {}) {
+  const canUseAdminFeatures = options.canUseAdminFeatures || (() => false);
   const importButton = document.getElementById("import-games-btn");
   const presetButton = document.getElementById("load-preset-games-btn");
   const textArea = document.getElementById("import-games-json");
@@ -40,6 +41,10 @@ export function setupGameImport() {
 
   importButton?.addEventListener("click", async () => {
     try {
+        if (!canUseAdminFeatures()) {
+            if (status) status.textContent = "Log in as admin before importing games.";
+            return;
+        }
       if (status) status.textContent = "Importing games...";
 
       const games = parseImportPayload(textArea.value);

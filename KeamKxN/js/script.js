@@ -2,6 +2,15 @@ import { ROLE_KEYS, generateOptimalTeams } from './teamAlgorithm.js';
 import { saveCompletedGame } from "./statsApi.js";
 import { setupStatsTab, refreshStats } from "./statsTab.js";
 import { setupGameImport } from "./importGames.js";
+import { supabase } from "./supabaseClient.js";
+import {
+  loginWithUsername,
+  logout,
+  getCurrentUser,
+  isAdmin
+} from "./auth.js";
+
+let adminMode = false;
 
 // -------------------- Rating slider --------------------
 
@@ -10,6 +19,83 @@ const participants = [];
 
 const line = document.querySelector(".shared-line");
 const list = document.querySelector(".participants-list");
+
+function setAdminUiEnabled(enabled) {
+  document.querySelectorAll("[data-admin-only]").forEach((element) => {
+    element.hidden = !enabled;
+  });
+
+  if (!enabled) {
+    const activeAdminPanel = document.querySelector(".tab-panel.active[data-admin-only]");
+
+    if (activeAdminPanel) {
+      document.querySelectorAll(".tab-panel").forEach(panel => {
+        panel.classList.remove("active");
+      });
+
+      document.querySelectorAll("[data-tab]").forEach(button => {
+        button.classList.remove("active");
+      });
+
+      document.getElementById("generator-tab")?.classList.add("active");
+      document.querySelector("[data-tab='generator']")?.classList.add("active");
+    }
+  }
+}
+
+async function refreshAuthState() {
+  const user = await getCurrentUser();
+  adminMode = await isAdmin();
+
+  const usernameInput = document.getElementById("login-username");
+  const passwordInput = document.getElementById("login-password");
+  const loginButton = document.getElementById("login-btn");
+  const logoutButton = document.getElementById("logout-btn");
+  const status = document.getElementById("auth-status");
+
+  if (user && adminMode) {
+    status.textContent = "Admin mode unlocked";
+    usernameInput.hidden = true;
+    passwordInput.hidden = true;
+    loginButton.hidden = true;
+    logoutButton.hidden = false;
+  } else if (user && !adminMode) {
+    status.textContent = "Logged in, but not authorised";
+    usernameInput.hidden = true;
+    passwordInput.hidden = true;
+    loginButton.hidden = true;
+    logoutButton.hidden = false;
+  } else {
+    status.textContent = "Base mode";
+    usernameInput.hidden = false;
+    passwordInput.hidden = false;
+    loginButton.hidden = false;
+    logoutButton.hidden = true;
+  }
+
+  setAdminUiEnabled(adminMode);
+}
+
+document.getElementById("login-btn")?.addEventListener("click", async () => {
+  const username = document.getElementById("login-username").value;
+  const password = document.getElementById("login-password").value;
+
+  try {
+    await loginWithUsername(username, password);
+    await refreshAuthState();
+  } catch (error) {
+    alert(error.message);
+  }
+});
+
+document.getElementById("logout-btn")?.addEventListener("click", async () => {
+  await logout();
+  await refreshAuthState();
+});
+
+supabase.auth.onAuthStateChange(() => {
+  refreshAuthState();
+});
 
 // -------------------- Player Management --------------------
 
@@ -369,7 +455,9 @@ function displayTeams(players, solution) {
   container.appendChild(teamB);
 
   resultsEl.appendChild(container);
-  resultsEl.appendChild(createPostGameForm(players, solution, teamAName, teamBName));
+  if (adminMode) {
+    resultsEl.appendChild(createPostGameForm(players, solution, teamAName, teamBName));
+  }
 }
 
 function createPostGameForm(players, solution, teamAName, teamBName) {
@@ -442,6 +530,10 @@ function createPostGameForm(players, solution, teamAName, teamBName) {
   }
 
   panel.querySelector("#submit-completed-game-btn").addEventListener("click", async () => {
+    if (!adminMode) {
+      alert("Only the admin login can save completed games.");
+      return;
+    }
     const button = panel.querySelector("#submit-completed-game-btn");
     const status = panel.querySelector("#submit-game-status");
 
@@ -710,8 +802,15 @@ window.addEventListener("load", () => {
   ensureDefaultPreset();
 });
 
-setupStatsTab();
-setupGameImport();
+setupStatsTab({
+  canUseAdminFeatures: () => adminMode
+});
+
+setupGameImport({
+  canUseAdminFeatures: () => adminMode
+});
+
+refreshAuthState();
 
 // -------------------- Share Results --------------------
 // Todo: implement share results functionality

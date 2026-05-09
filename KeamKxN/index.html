@@ -26,11 +26,24 @@
         <h1>Welcome to KeamKxN</h1>
         <p>Your go-to tool for generating balanced League of Legends 5v5 customs with a fancy number-line instead, inspired from <a href="https://www.keamk.com/">KeamK.</a></p>
     </section>
+    <section id="auth-panel" class="auth-panel">
+        <input id="login-username" type="text" placeholder="Username" autocomplete="username">
+        <input id="login-password" type="password" placeholder="Password" autocomplete="current-password">
+        <button id="login-btn" type="button" class="selector">Log in</button>
+        <button id="logout-btn" type="button" class="selector" hidden>Log out</button>
+        <span id="auth-status" class="muted">Base mode</span>
+    </section>
     <nav class="app-tabs">
         <button type="button" class="tab-button active" data-tab="generator">Generator</button>
-        <button type="button" class="tab-button" data-tab="stats">Game Stats</button>
-        <button type="button" class="tab-button" data-tab="champions">Champion Stats</button>
-        <button type="button" class="tab-button" data-tab="import">Import</button>
+        <button type="button" class="tab-button" data-tab="stats" data-admin-only hidden>
+            Game Stats
+        </button>
+        <button type="button" class="tab-button" data-tab="champions" data-admin-only hidden>
+            Champion Stats
+        </button>
+        <button type="button" class="tab-button" data-tab="import" data-admin-only hidden>
+            Import
+        </button>
     </nav>
 
 <section id="generator-tab" class="tab-panel active">
@@ -135,7 +148,7 @@
 
 </section>
 
-<section id="stats-tab" class="tab-panel">
+<section id="stats-tab" class="tab-panel" data-admin-only hidden>
   <section class="stats-section">
     <h2>Game Stats</h2>
     <p id="stats-status" class="muted">Stats not loaded yet.</p>
@@ -149,7 +162,7 @@
   </section>
 </section>
 
-<section id="champions-tab" class="tab-panel">
+<section id="champions-tab" class="tab-panel" data-admin-only hidden>
   <section class="stats-section">
     <h2>Champion Stats</h2>
     <button id="refresh-champion-stats-btn" type="button" class="selector">Refresh Champion Stats</button>
@@ -162,7 +175,7 @@
   </section>
 </section>
 
-<section id="import-tab" class="tab-panel">
+<section id="import-tab" class="tab-panel" data-admin-only hidden>
   <section class="stats-section">
     <h2>Import Games</h2>
 

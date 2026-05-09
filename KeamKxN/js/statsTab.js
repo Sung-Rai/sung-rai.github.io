@@ -285,11 +285,18 @@ export async function refreshStats() {
   }
 }
 
-export function setupStatsTab() {
+export function setupStatsTab(options = {}) {
+  const canUseAdminFeatures = options.canUseAdminFeatures || (() => false);
   document.querySelectorAll("[data-tab]").forEach(button => {
     button.addEventListener("click", async () => {
       const selectedTab = button.dataset.tab;
-
+      if (
+        (selectedTab === "stats" || selectedTab === "champions" || selectedTab === "import") &&
+        !canUseAdminFeatures()
+    ) {
+        alert("Log in to access this section.");
+        return;
+    }
       document.querySelectorAll(".tab-panel").forEach(panel => {
         panel.classList.remove("active");
       });
