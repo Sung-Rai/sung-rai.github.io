@@ -26,6 +26,27 @@
         <h1>Welcome to KeamKxN</h1>
         <p>Your go-to tool for generating balanced League of Legends 5v5 customs with a fancy number-line instead, inspired from <a href="https://www.keamk.com/">KeamK.</a></p>
     </section>
+    <section id="auth-panel" class="auth-panel">
+        <input id="login-username" type="text" placeholder="Username" autocomplete="username">
+        <input id="login-password" type="password" placeholder="Password" autocomplete="current-password">
+        <button id="login-btn" type="button" class="selector">Log in</button>
+        <button id="logout-btn" type="button" class="selector" hidden>Log out</button>
+        <span id="auth-status" class="muted">Base mode</span>
+    </section>
+    <nav class="app-tabs">
+        <button type="button" class="tab-button active" data-tab="generator">Generator</button>
+        <button type="button" class="tab-button" data-tab="stats" data-admin-only hidden>
+            Game Stats
+        </button>
+        <button type="button" class="tab-button" data-tab="champions" data-admin-only hidden>
+            Champion Stats
+        </button>
+        <button type="button" class="tab-button" data-tab="import" data-admin-only hidden>
+            Import
+        </button>
+    </nav>
+
+<section id="generator-tab" class="tab-panel active">
 
     <section class="form-wrapper">
         <form class="form-container">  
@@ -122,8 +143,55 @@
 
 
     <div id="results" class="results hidden">
-        <!-- results generated here -->
+  <!-- results generated here -->
+</div>
+
+</section>
+
+<section id="stats-tab" class="tab-panel" data-admin-only hidden>
+  <section class="stats-section">
+    <h2>Game Stats</h2>
+    <p id="stats-status" class="muted">Stats not loaded yet.</p>
+    <button id="refresh-stats-btn" type="button" class="selector">Refresh Stats</button>
+
+    <h3>Player Stats</h3>
+    <div id="player-stats"></div>
+
+    <h3>Recent Games</h3>
+    <div id="recent-games"></div>
+  </section>
+</section>
+
+<section id="champions-tab" class="tab-panel" data-admin-only hidden>
+  <section class="stats-section">
+    <h2>Champion Stats</h2>
+    <button id="refresh-champion-stats-btn" type="button" class="selector">Refresh Champion Stats</button>
+
+    <h3>Champion Pick Stats</h3>
+    <div id="champion-pick-stats"></div>
+
+    <h3>Champion Ban Stats</h3>
+    <div id="champion-ban-stats"></div>
+  </section>
+</section>
+
+<section id="import-tab" class="tab-panel" data-admin-only hidden>
+  <section class="stats-section">
+    <h2>Import Games</h2>
+
+    <p class="muted">
+      Paste JSON in the same format as <code>data/presetGames.json</code>.
+    </p>
+
+    <div class="import-actions">
+      <button id="load-preset-games-btn" type="button" class="selector">Load Preset File</button>
+      <button id="import-games-btn" type="button" class="selector">Import Games</button>
     </div>
+
+    <textarea id="import-games-json" class="import-textarea" spellcheck="false"></textarea>
+    <p id="import-status" class="muted">No import started.</p>
+  </section>
+</section>
 
 </body>
 </html>
