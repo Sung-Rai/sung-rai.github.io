@@ -1,4 +1,8 @@
 import { ROLE_KEYS, generateOptimalTeams } from './teamAlgorithm.js';
+import { saveCompletedGame } from "./statsApi.js";
+import { setupStatsTab, refreshStats } from "./statsTab.js";
+import { setupGameImport } from "./importGames.js";
+
 // -------------------- Rating slider --------------------
 
 const participants = [];
@@ -306,18 +310,22 @@ row.appendChild(removeBtn);
 
 function displayTeams(players, solution) {
   const resultsEl = document.getElementById("results");
-  resultsEl.innerHTML = ""; // clear previous results
+
+  resultsEl.innerHTML = "";
   resultsEl.classList.remove("hidden");
+
+  const teamAName = document.getElementById("teamAName")?.value || "Team A";
+  const teamBName = document.getElementById("teamBName")?.value || "Team B";
 
   const teamA = document.createElement("div");
   teamA.className = "team";
+
   const teamB = document.createElement("div");
   teamB.className = "team";
 
-  teamA.innerHTML = "<h2>Team A</h2>";
-  teamB.innerHTML = "<h2>Team B</h2>";
+  teamA.innerHTML = `<h2>${teamAName}</h2>`;
+  teamB.innerHTML = `<h2>${teamBName}</h2>`;
 
-  // Store totals
   let totalA = 0;
   let totalB = 0;
 
@@ -345,7 +353,6 @@ function displayTeams(players, solution) {
     teamB.appendChild(bRow);
   }
 
-  // Add total ratings below each team
   const totalARow = document.createElement("div");
   totalARow.className = "role-row total-row";
   totalARow.innerHTML = `<span class="role-name">Total</span><span class="skill">${totalA}</span>`;
@@ -362,15 +369,172 @@ function displayTeams(players, solution) {
   container.appendChild(teamB);
 
   resultsEl.appendChild(container);
+  resultsEl.appendChild(createPostGameForm(players, solution, teamAName, teamBName));
+}
+
+function createPostGameForm(players, solution, teamAName, teamBName) {
+  const panel = document.createElement("section");
+  panel.className = "post-game-panel";
+
+  const title = document.getElementById("title")?.value || "Untitled Game";
+  const today = new Date().toISOString().slice(0, 10);
+
+  panel.innerHTML = `
+    <h3>Save Completed Game</h3>
+
+    <div class="post-game-meta">
+      <label>
+        Game Date
+        <input id="completed-game-date" type="date" value="${today}">
+      </label>
+
+      <label>
+        Winning Team
+        <select id="completed-game-winner">
+          <option value="A">${teamAName}</option>
+          <option value="B">${teamBName}</option>
+        </select>
+      </label>
+
+      <label>
+        Team A bans, comma-separated
+        <input id="team-a-bans" type="text" placeholder="Example: Yasuo, Yone, Zed">
+      </label>
+
+      <label>
+        Team B bans, comma-separated
+        <input id="team-b-bans" type="text" placeholder="Example: Caitlyn, Draven, Milio">
+      </label>
+
+      <label>
+        Notes
+        <textarea id="completed-game-notes" rows="3" placeholder="Optional notes"></textarea>
+      </label>
+    </div>
+
+    <div class="post-game-grid">
+      <div class="post-game-team">
+        <h4>${teamAName}</h4>
+        <div id="post-game-team-a"></div>
+      </div>
+
+      <div class="post-game-team">
+        <h4>${teamBName}</h4>
+        <div id="post-game-team-b"></div>
+      </div>
+    </div>
+
+    <div class="post-game-actions">
+      <button id="submit-completed-game-btn" type="button" class="selector">Submit Completed Game</button>
+      <span id="submit-game-status" class="submit-status"></span>
+    </div>
+  `;
+
+  const teamAContainer = panel.querySelector("#post-game-team-a");
+  const teamBContainer = panel.querySelector("#post-game-team-b");
+
+  for (const role of ROLE_KEYS) {
+    const aSolution = solution.find(entry => entry.team === "A" && entry.role === role);
+    const bSolution = solution.find(entry => entry.team === "B" && entry.role === role);
+
+    teamAContainer.appendChild(createPostGamePlayerRow(players, aSolution));
+    teamBContainer.appendChild(createPostGamePlayerRow(players, bSolution));
+  }
+
+  panel.querySelector("#submit-completed-game-btn").addEventListener("click", async () => {
+    const button = panel.querySelector("#submit-completed-game-btn");
+    const status = panel.querySelector("#submit-game-status");
+
+    try {
+      button.disabled = true;
+      status.textContent = "Submitting game...";
+
+      const winningTeam = panel.querySelector("#completed-game-winner").value;
+      const playedAt = panel.querySelector("#completed-game-date").value;
+      const notes = panel.querySelector("#completed-game-notes").value;
+
+      const submittedPlayers = [...panel.querySelectorAll(".post-game-row")].map(row => {
+        return {
+          id: row.dataset.playerId,
+          name: row.dataset.playerName,
+          team: row.dataset.team,
+          role: row.dataset.role,
+          champion: row.querySelector("[data-field='champion']").value,
+          kills: row.querySelector("[data-field='kills']").value,
+          deaths: row.querySelector("[data-field='deaths']").value,
+          assists: row.querySelector("[data-field='assists']").value
+        };
+      });
+
+      const bans = [
+        ...parseBanInput(panel.querySelector("#team-a-bans").value, "A"),
+        ...parseBanInput(panel.querySelector("#team-b-bans").value, "B")
+      ];
+
+      await saveCompletedGame({
+        title,
+        playedAt,
+        winningTeam,
+        notes,
+        players: submittedPlayers,
+        bans
+      });
+
+      status.textContent = "Game submitted.";
+      button.textContent = "Submitted";
+      await refreshStats();
+    } catch (error) {
+      console.error(error);
+      status.textContent = `Submit failed: ${error.message}`;
+      button.disabled = false;
+    }
+  });
+
+  return panel;
+}
+
+function createPostGamePlayerRow(players, solutionEntry) {
+  const player = players[solutionEntry.playerIndex];
+
+  const row = document.createElement("div");
+  row.className = "post-game-row";
+  row.dataset.playerId = player.id;
+  row.dataset.playerName = player.name;
+  row.dataset.team = solutionEntry.team;
+  row.dataset.role = solutionEntry.role;
+
+  row.innerHTML = `
+    <strong>${solutionEntry.role}</strong>
+    <span>${player.name}</span>
+    <input data-field="champion" type="text" placeholder="Champion">
+    <input data-field="kills" type="number" min="0" placeholder="K">
+    <input data-field="deaths" type="number" min="0" placeholder="D">
+    <input data-field="assists" type="number" min="0" placeholder="A">
+  `;
+
+  return row;
+}
+
+function parseBanInput(rawValue, team) {
+  return String(rawValue ?? "")
+    .split(",")
+    .map(champion => champion.trim())
+    .filter(Boolean)
+    .map((champion, index) => ({
+      team,
+      champion,
+      banOrder: index + 1
+    }));
 }
 
 // -------------------- Team Generation --------------------
 
 function generatePlayersFromSliders() {
-
   return participants.map((p) => {
     return {
+      id: p.id,
       name: p.name,
+      color: p.color,
       ratings: ROLE_KEYS.reduce((acc, role) => {
         acc[role] = p.value;
         return acc;
@@ -545,6 +709,9 @@ document.addEventListener("click", (e) => {
 window.addEventListener("load", () => {
   ensureDefaultPreset();
 });
+
+setupStatsTab();
+setupGameImport();
 
 // -------------------- Share Results --------------------
 // Todo: implement share results functionality
