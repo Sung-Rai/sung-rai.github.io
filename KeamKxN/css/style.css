@@ -1282,3 +1282,54 @@ body {
     width: 100%;
   }
 }
+
+.champion-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.champion-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
+.champion-autocomplete {
+  position: relative;
+}
+
+.champion-autocomplete.has-champion-icon input {
+  padding-left: 2.35rem;
+}
+
+.champion-input-icon {
+  position: absolute;
+  left: 0.55rem;
+  top: 50%;
+  transform: translateY(-50%);
+
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+
+  pointer-events: none;
+  z-index: 2;
+}
+
+.champion-autocomplete-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.champion-option-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex: 0 0 auto;
+}

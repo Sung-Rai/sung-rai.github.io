@@ -813,6 +813,8 @@ function createPostGameForm(players, solution, teamAName, teamBName) {
         ...parseBanInputs(panel.querySelector("#team-b-bans"), "B", championIndex)
       ];
 
+      validateChampionDraftRules(submittedPlayers, bans);
+
       await saveCompletedGame({
         title,
         playedAt,
@@ -920,6 +922,73 @@ function parseBanInputs(container, team, championIndex) {
         banOrder
       };
     });
+}
+
+function championConflictKey(value) {
+  return String(value ?? "").trim().toLowerCase();
+}
+
+function validateChampionDraftRules(players, bans) {
+  const pickedChampions = new Map();
+  const bannedChampions = new Map();
+
+  // Check duplicate picks
+  for (const player of players) {
+    const key = championConflictKey(player.champion);
+
+    if (!key) continue;
+
+    if (pickedChampions.has(key)) {
+      const firstPick = pickedChampions.get(key);
+
+      throw new Error(
+        `${player.champion} has been picked more than once. ` +
+        `First picked by ${firstPick.playerName} (${firstPick.role}, Team ${firstPick.team}), ` +
+        `then by ${player.name} (${player.role}, Team ${player.team}).`
+      );
+    }
+
+    pickedChampions.set(key, {
+      champion: player.champion,
+      playerName: player.name,
+      team: player.team,
+      role: player.role
+    });
+  }
+
+  // Check duplicate bans
+  for (const ban of bans) {
+    const key = championConflictKey(ban.champion);
+
+    if (!key) continue;
+
+    if (bannedChampions.has(key)) {
+      const firstBan = bannedChampions.get(key);
+
+      throw new Error(
+        `${ban.champion} has been banned more than once. ` +
+        `First banned by Team ${firstBan.team}, then by Team ${ban.team}.`
+      );
+    }
+
+    bannedChampions.set(key, {
+      champion: ban.champion,
+      team: ban.team
+    });
+  }
+
+  // Check picked + banned conflict
+  for (const [key, banned] of bannedChampions.entries()) {
+    const picked = pickedChampions.get(key);
+
+    if (picked) {
+      throw new Error(
+        `${picked.champion} cannot be both banned and picked. ` +
+        `Picked by ${picked.playerName} (${picked.role}, Team ${picked.team}) ` +
+        `and banned by Team ${banned.team}.`
+      );
+    }
+  }
 }
 
 // -------------------- Team Generation --------------------
