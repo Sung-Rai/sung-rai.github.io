@@ -27,8 +27,8 @@
         <p>Your go-to tool for generating balanced League of Legends 5v5 customs with a fancy number-line instead, inspired from <a href="https://www.keamk.com/">KeamK.</a></p>
     </section>
     <section id="auth-panel" class="auth-panel">
-        <input id="login-username" type="text" placeholder="Username" autocomplete="username">
-        <input id="login-password" type="password" placeholder="Password" autocomplete="current-password">
+        <input id="login-username" type="text" placeholder="Username" autocomplete="off">
+        <input id="login-password" type="password" placeholder="Password" autocomplete="new-password">
         <button id="login-btn" type="button" class="selector">Log in</button>
         <button id="logout-btn" type="button" class="selector" hidden>Log out</button>
         <span id="auth-status" class="muted">Base mode</span>
@@ -100,6 +100,17 @@
                         <button id="savePlayerBtn" class="selector" type="button">Save Player</button>
                         <button id="addPlayerBtn" class="selector" type="button">Add Player</button>
                     </div>
+                    <div class="database-player-picker" data-admin-only hidden>
+                        <h3>Database Players</h3>
+                        <p class="muted">Click a player to add them to the numberline.</p>
+                    <input
+                        id="database-player-search"
+                        class="newPlayerInput"
+                        type="text"
+                        placeholder="Search database players"
+                    >
+                    <div id="database-players-list" class="database-players-list"></div>
+                    </div>
                 </div>
             </div>
 
@@ -167,11 +178,8 @@
     <h2>Champion Stats</h2>
     <button id="refresh-champion-stats-btn" type="button" class="selector">Refresh Champion Stats</button>
 
-    <h3>Champion Pick Stats</h3>
-    <div id="champion-pick-stats"></div>
-
-    <h3>Champion Ban Stats</h3>
-    <div id="champion-ban-stats"></div>
+    <h3>Champion Pick/Ban Stats</h3>
+    <div id="champion-stats"></div>
   </section>
 </section>
 
