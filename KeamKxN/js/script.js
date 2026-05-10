@@ -1,8 +1,17 @@
 import { ROLE_KEYS, generateOptimalTeams } from './teamAlgorithm.js';
-import { saveCompletedGame } from "./statsApi.js";
+import {
+  saveCompletedGame,
+  fetchPlayers,
+  updatePlayerDefaultRatings
+} from "./statsApi.js";
 import { setupStatsTab, refreshStats } from "./statsTab.js";
 import { setupGameImport } from "./importGames.js";
 import { supabase } from "./supabaseClient.js";
+import {
+  getChampionIndex,
+  attachChampionAutocomplete,
+  canonicalizeChampionName
+} from "./champions.js";
 import {
   loginWithUsername,
   logout,
@@ -74,6 +83,15 @@ async function refreshAuthState() {
   }
 
   setAdminUiEnabled(adminMode);
+
+  if (adminMode) {
+    await loadDatabasePlayers();
+  } else {
+    clearAdminGeneratedUi();
+
+    if (usernameInput) usernameInput.value = "";
+    if (passwordInput) passwordInput.value = "";
+  }
 }
 
 document.getElementById("login-btn")?.addEventListener("click", async () => {
@@ -89,6 +107,14 @@ document.getElementById("login-btn")?.addEventListener("click", async () => {
 });
 
 document.getElementById("logout-btn")?.addEventListener("click", async () => {
+  clearAdminGeneratedUi();
+
+  const usernameInput = document.getElementById("login-username");
+  const passwordInput = document.getElementById("login-password");
+
+  if (usernameInput) usernameInput.value = "";
+  if (passwordInput) passwordInput.value = "";
+
   await logout();
   await refreshAuthState();
 });
@@ -185,6 +211,183 @@ document.getElementById("savePlayerBtn").addEventListener("click", () => {
   renderSavedPlayers();
 });
 
+let databasePlayers = [];
+
+function normalizePlayerName(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+const PLAYER_COLORS = [
+  "#ef4444",
+  "#f97316",
+  "#f59e0b",
+  "#84cc16",
+  "#22c55e",
+  "#14b8a6",
+  "#06b6d4",
+  "#3b82f6",
+  "#6366f1",
+  "#8b5cf6",
+  "#d946ef",
+  "#ec4899",
+  "#f43f5e"
+];
+
+function getPlayerColor(player) {
+  const key = String(
+    player.stable_key ??
+    player.stableKey ??
+    player.name ??
+    player.display_name ??
+    ""
+  );
+
+  let hash = 0;
+
+  for (let i = 0; i < key.length; i += 1) {
+    hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  }
+
+  return PLAYER_COLORS[hash % PLAYER_COLORS.length];
+}
+
+function makeTempParticipantId() {
+  return Date.now() + Math.floor(Math.random() * 100000);
+}
+
+function addDatabasePlayerToNumberline(dbPlayer) {
+  if (participants.length >= 10) {
+    alert("You can only select 10 players.");
+    return;
+  }
+
+  const name = dbPlayer.display_name;
+  const normalizedName = normalizePlayerName(name);
+
+  const alreadySelected = participants.some(player => {
+    return normalizePlayerName(player.name) === normalizedName;
+  });
+
+  if (alreadySelected) {
+    alert(`${name} is already selected.`);
+    return;
+  }
+
+  const rating = Number(dbPlayer.default_rating);
+
+  participants.push({
+    id: makeTempParticipantId(),
+    dbPlayerId: dbPlayer.id,
+    stableKey: dbPlayer.stable_key,
+    name,
+    value: Number.isFinite(rating) ? rating : 50,
+    color: getPlayerColor(dbPlayer)
+  });
+
+  refreshSlider();
+  renderDatabasePlayers();
+}
+
+function renderDatabasePlayers() {
+  const container = document.getElementById("database-players-list");
+  const searchInput = document.getElementById("database-player-search");
+
+  if (!container) return;
+
+  const query = normalizePlayerName(searchInput?.value ?? "");
+
+  const filteredPlayers = databasePlayers.filter(player => {
+    return normalizePlayerName(player.display_name).includes(query);
+  });
+
+  container.innerHTML = "";
+
+  for (const player of filteredPlayers) {
+    const alreadySelected = participants.some(selected => {
+      return normalizePlayerName(selected.name) === normalizePlayerName(player.display_name);
+    });
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "database-player-chip selector";
+    const rating = Number.isFinite(Number(player.default_rating))
+      ? Number(player.default_rating)
+      : 50;
+    button.textContent = alreadySelected
+      ? `${player.display_name} (${rating}) ✓`
+      : `${player.display_name} (${rating})`;
+    button.disabled = alreadySelected;
+
+    button.addEventListener("click", () => {
+      addDatabasePlayerToNumberline(player);
+    });
+
+    container.appendChild(button);
+  }
+
+  if (!filteredPlayers.length) {
+    container.innerHTML = `<p class="muted">No matching players.</p>`;
+  }
+}
+
+function clearDatabasePlayers() {
+  databasePlayers = [];
+
+  const container = document.getElementById("database-players-list");
+  if (container) {
+    container.innerHTML = "";
+  }
+
+  const searchInput = document.getElementById("database-player-search");
+  if (searchInput) {
+    searchInput.value = "";
+  }
+}
+
+async function loadDatabasePlayers() {
+  if (!adminMode) return;
+
+  try {
+    databasePlayers = await fetchPlayers();
+    renderDatabasePlayers();
+  } catch (error) {
+    console.warn("Could not load database players:", error.message);
+  }
+}
+
+function clearAdminGeneratedUi() {
+  clearDatabasePlayers();
+
+  // Remove post-game submit panels generated while admin was logged in.
+  document.querySelectorAll(".post-game-panel").forEach(panel => {
+    panel.remove();
+  });
+
+  // Remove database-selected players from the numberline.
+  for (let index = participants.length - 1; index >= 0; index -= 1) {
+    if (participants[index].dbPlayerId) {
+      participants.splice(index, 1);
+    }
+  }
+
+  refreshSlider();
+  renderSavedPlayers();
+
+  // Clear generated team results too, because they may contain database players.
+  const resultsEl = document.getElementById("results");
+  if (resultsEl) {
+    resultsEl.innerHTML = "";
+    resultsEl.classList.add("hidden");
+  }
+}
+
+document.getElementById("database-player-search")?.addEventListener("input", () => {
+  renderDatabasePlayers();
+});
+
 document.getElementById("addPlayerBtn").addEventListener("click", () => {
 
   if (participants.length >= 10) {
@@ -210,6 +413,7 @@ document.getElementById("addPlayerBtn").addEventListener("click", () => {
   // Add to participants (numberline)
   participants.push(newPlayer);
   refreshSlider();
+  renderDatabasePlayers();  
 
   // Do NOT clear inputs
 });
@@ -257,13 +461,14 @@ document.addEventListener("click", e => {
   }
 
   participants.push({
-    ...player,
-    value: player.value ?? 50
+  ...player,
+  value: player.value ?? 50
   });
 
   refreshSlider();
   renderSavedPlayers();
-});
+  renderDatabasePlayers();
+  });
 
 // ----------------- Participant numberline -----------------
 
@@ -377,10 +582,15 @@ function createParticipant(p) {
   removeBtn.className = "remove-player-btn";
 
   removeBtn.addEventListener("click", () => {
-    const index = participants.findIndex(ap => ap.id === p.id);
-    if (index !== -1) participants.splice(index, 1);
-    refreshSlider();
-    renderSavedPlayers();
+  const index = participants.findIndex(ap => ap.id === p.id);
+
+  if (index !== -1) {
+    participants.splice(index, 1);
+  }
+
+  refreshSlider();
+  renderSavedPlayers();
+  renderDatabasePlayers();
   });
 
 row.appendChild(removeBtn);
@@ -463,6 +673,7 @@ function displayTeams(players, solution) {
 function createPostGameForm(players, solution, teamAName, teamBName) {
   const panel = document.createElement("section");
   panel.className = "post-game-panel";
+  panel.setAttribute("data-admin-only", "");
 
   const title = document.getElementById("title")?.value || "Untitled Game";
   const today = new Date().toISOString().slice(0, 10);
@@ -484,15 +695,27 @@ function createPostGameForm(players, solution, teamAName, teamBName) {
         </select>
       </label>
 
-      <label>
-        Team A bans, comma-separated
-        <input id="team-a-bans" type="text" placeholder="Example: Yasuo, Yone, Zed">
-      </label>
+      <div class="ban-input-group">
+      <label>Team A bans</label>
+      <div id="team-a-bans" class="ban-inputs">
+        <input data-ban-input data-champion-input type="text" placeholder="Ban 1">
+        <input data-ban-input data-champion-input type="text" placeholder="Ban 2">
+        <input data-ban-input data-champion-input type="text" placeholder="Ban 3">
+        <input data-ban-input data-champion-input type="text" placeholder="Ban 4">
+        <input data-ban-input data-champion-input type="text" placeholder="Ban 5">
+      </div>
+      </div>
 
-      <label>
-        Team B bans, comma-separated
-        <input id="team-b-bans" type="text" placeholder="Example: Caitlyn, Draven, Milio">
-      </label>
+      <div class="ban-input-group">
+        <label>Team B bans</label>
+        <div id="team-b-bans" class="ban-inputs">
+          <input data-ban-input data-champion-input type="text" placeholder="Ban 1">
+          <input data-ban-input data-champion-input type="text" placeholder="Ban 2">
+          <input data-ban-input data-champion-input type="text" placeholder="Ban 3">
+          <input data-ban-input data-champion-input type="text" placeholder="Ban 4">
+          <input data-ban-input data-champion-input type="text" placeholder="Ban 5">
+        </div>
+      </div>
 
       <label>
         Notes
@@ -528,6 +751,13 @@ function createPostGameForm(players, solution, teamAName, teamBName) {
     teamAContainer.appendChild(createPostGamePlayerRow(players, aSolution));
     teamBContainer.appendChild(createPostGamePlayerRow(players, bSolution));
   }
+  getChampionIndex()
+  .then(championIndex => {
+    attachChampionAutocomplete(panel, championIndex);
+  })
+  .catch(error => {
+    console.warn("Champion autocomplete unavailable:", error.message);
+  });
 
   panel.querySelector("#submit-completed-game-btn").addEventListener("click", async () => {
     if (!adminMode) {
@@ -545,9 +775,29 @@ function createPostGameForm(players, solution, teamAName, teamBName) {
       const playedAt = panel.querySelector("#completed-game-date").value;
       const notes = panel.querySelector("#completed-game-notes").value;
 
+      const championIndex = await getChampionIndex();
+
+      for (const input of panel.querySelectorAll("[data-field='champion']")) {
+        const canonical = canonicalizeChampionName(input.value, championIndex);
+
+        if (!canonical) {
+          input.focus();
+          throw new Error(`Invalid champion: ${input.value || "(empty)"}`);
+        }
+
+        input.value = canonical;
+      }
+
       const submittedPlayers = [...panel.querySelectorAll(".post-game-row")].map(row => {
+        const participant = participants.find(p => {
+          return String(p.id) === String(row.dataset.playerId);
+        });
+
         return {
           id: row.dataset.playerId,
+          dbPlayerId: row.dataset.dbPlayerId || null,
+          stableKey: row.dataset.stableKey || null,
+          defaultRating: participant?.value ?? Number(row.dataset.defaultRating ?? 50),
           name: row.dataset.playerName,
           team: row.dataset.team,
           role: row.dataset.role,
@@ -559,8 +809,8 @@ function createPostGameForm(players, solution, teamAName, teamBName) {
       });
 
       const bans = [
-        ...parseBanInput(panel.querySelector("#team-a-bans").value, "A"),
-        ...parseBanInput(panel.querySelector("#team-b-bans").value, "B")
+        ...parseBanInputs(panel.querySelector("#team-a-bans"), "A", championIndex),
+        ...parseBanInputs(panel.querySelector("#team-b-bans"), "B", championIndex)
       ];
 
       await saveCompletedGame({
@@ -571,6 +821,37 @@ function createPostGameForm(players, solution, teamAName, teamBName) {
         players: submittedPlayers,
         bans
       });
+
+      try {
+        const ratingUpdates = submittedPlayers
+          .filter(player => player.dbPlayerId)
+          .map(player => ({
+            playerId: player.dbPlayerId,
+            rating: player.defaultRating
+          }));
+
+        if (ratingUpdates.length > 0) {
+          const updatedRatings = await updatePlayerDefaultRatings(ratingUpdates);
+
+          for (const update of updatedRatings) {
+            const dbPlayer = databasePlayers.find(player => {
+              return String(player.id) === String(update.playerId);
+            });
+
+            if (dbPlayer) {
+              dbPlayer.default_rating = update.rating;
+            }
+          }
+
+          renderDatabasePlayers();
+        }
+      } catch (ratingError) {
+        console.warn("Game saved, but rating update failed:", ratingError.message);
+        status.textContent = "Game submitted, but rating update failed.";
+        button.textContent = "Submitted";
+        await refreshStats();
+        return;
+      }
 
       status.textContent = "Game submitted.";
       button.textContent = "Submitted";
@@ -594,11 +875,13 @@ function createPostGamePlayerRow(players, solutionEntry) {
   row.dataset.playerName = player.name;
   row.dataset.team = solutionEntry.team;
   row.dataset.role = solutionEntry.role;
-
+  row.dataset.dbPlayerId = player.dbPlayerId ?? "";
+  row.dataset.stableKey = player.stableKey ?? "";
+  row.dataset.defaultRating = String(player.value ?? 50);
   row.innerHTML = `
     <strong>${solutionEntry.role}</strong>
     <span>${player.name}</span>
-    <input data-field="champion" type="text" placeholder="Champion">
+    <input data-field="champion" data-champion-input type="text" placeholder="Champion" required>
     <input data-field="kills" type="number" min="0" placeholder="K">
     <input data-field="deaths" type="number" min="0" placeholder="D">
     <input data-field="assists" type="number" min="0" placeholder="A">
@@ -607,16 +890,36 @@ function createPostGamePlayerRow(players, solutionEntry) {
   return row;
 }
 
-function parseBanInput(rawValue, team) {
-  return String(rawValue ?? "")
-    .split(",")
-    .map(champion => champion.trim())
-    .filter(Boolean)
-    .map((champion, index) => ({
-      team,
-      champion,
+function parseBanInputs(container, team, championIndex) {
+  return [...container.querySelectorAll("[data-ban-input]")]
+    .map((input, index) => ({
+      rawValue: input.value.trim(),
       banOrder: index + 1
-    }));
+    }))
+    .filter(({ rawValue }) => {
+      const normalized = rawValue.toLowerCase();
+
+      return (
+        rawValue &&
+        normalized !== "none" &&
+        normalized !== "no ban" &&
+        normalized !== "n/a" &&
+        normalized !== "na"
+      );
+    })
+    .map(({ rawValue, banOrder }) => {
+      const canonical = canonicalizeChampionName(rawValue, championIndex);
+
+      if (!canonical) {
+        throw new Error(`Invalid Team ${team} ban: ${rawValue}`);
+      }
+
+      return {
+        team,
+        champion: canonical,
+        banOrder
+      };
+    });
 }
 
 // -------------------- Team Generation --------------------
@@ -625,8 +928,11 @@ function generatePlayersFromSliders() {
   return participants.map((p) => {
     return {
       id: p.id,
+      dbPlayerId: p.dbPlayerId ?? null,
+      stableKey: p.stableKey ?? null,
       name: p.name,
       color: p.color,
+      value: p.value,
       ratings: ROLE_KEYS.reduce((acc, role) => {
         acc[role] = p.value;
         return acc;
@@ -739,8 +1045,10 @@ document.getElementById("clearNumberlineBtn").addEventListener("click", () => {
 
     if (!confirm("Are you sure you want to clear the numberline?")) return;
 
-    participants.length = 0; // clear all players
+    participants.length = 0;
     refreshSlider();
+    renderSavedPlayers();
+    renderDatabasePlayers();
 });
 
 // Save Current Numberline as Preset
@@ -756,6 +1064,8 @@ document.getElementById("savePresetBtn").addEventListener("click", () => {
 
   const presetPlayers = participants.map(p => ({
     id: p.id,
+    dbPlayerId: p.dbPlayerId ?? null,
+    stableKey: p.stableKey ?? null,
     name: p.name,
     value: p.value,
     color: p.color
@@ -779,9 +1089,11 @@ document.addEventListener("click", (e) => {
 
     if (!preset) return;
 
-    participants.length = 0; // clear current numberline
-    preset.players.forEach(p => participants.push({...p})); // copy players
+    participants.length = 0;
+    preset.players.forEach(p => participants.push({ ...p }));
     refreshSlider();
+    renderSavedPlayers();
+    renderDatabasePlayers();
     return;
   }
 

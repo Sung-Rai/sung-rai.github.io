@@ -32,11 +32,16 @@
 
 /* -------------------- Globals -------------------- */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
 }
+
+[hidden] {
+  display: none !important;
+}
+
 
 /* -------------------- Nav -------------------- */
 .navbar {
@@ -920,5 +925,360 @@ button:hover {
 
   #auth-status {
     text-align: center;
+  }
+}
+
+.ban-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ban-input-group > label {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.ban-inputs {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.ban-inputs input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  background: var(--card-color);
+  color: var(--dark-color-1);
+  font: inherit;
+}
+
+@media (max-width: 900px) {
+  .ban-inputs {
+    grid-template-columns: 1fr;
+  }
+}
+
+.database-player-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 1rem;
+  background: var(--blue-color-1-soft);
+}
+
+.database-players-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  max-width: min(1000px, 95%);
+}
+
+.database-player-chip {
+  padding: 0.45rem 0.7rem;
+}
+
+.database-player-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.champion-autocomplete {
+  position: relative;
+  width: 100%;
+}
+
+.champion-autocomplete input {
+  width: 100%;
+}
+
+.champion-autocomplete-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+
+  background: var(--light-color-1);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-soft);
+
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.champion-autocomplete-option {
+  display: block;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+
+  border: 0;
+  background: var(--light-color-1);
+  color: var(--dark-color-1);
+
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.champion-autocomplete-option:hover {
+  background: var(--blue-color-1-soft);
+}
+
+.player-manager {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  background-color: var(--blue-color-1-soft);
+  padding: 2rem 1rem;
+}
+
+.saved-players-collaper {
+  width: min(1100px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.add-player-form {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 4px;
+}
+
+.add-player-form .newPlayerInput {
+  min-width: 140px;
+  max-width: 220px;
+}
+
+#newPlayerColor {
+  width: 44px;
+  height: 32px;
+  padding: 0;
+}
+
+.database-player-picker {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+#database-player-search {
+  width: min(320px, 100%);
+}
+
+.database-players-list {
+  width: min(1000px, 100%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.database-player-chip {
+  padding: 0.45rem 0.7rem;
+}
+
+.database-player-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* -------------------- Player manager / database picker fixes -------------------- */
+
+html,
+body {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.full-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+}
+
+.player-manager.full-bleed {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 100vw;
+  padding: 2rem 1rem;
+
+  background-color: var(--blue-color-1-soft);
+}
+
+.saved-players-collaper {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+#toggle-saved-btn {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+#saved-players-list {
+  width: min(1000px, 100%);
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  max-height: 0;
+}
+
+#saved-players-list.expanded {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.add-player-form {
+  width: min(720px, 100%);
+  margin: 0 auto;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.add-player-form .newPlayerInput {
+  min-width: 0;
+  flex: 1 1 160px;
+  max-width: 220px;
+}
+
+#newPlayerName {
+  flex-basis: 220px;
+}
+
+#newPlayerRating {
+  flex-basis: 130px;
+}
+
+#newPlayerColor {
+  width: 44px;
+  height: 32px;
+  padding: 0;
+  flex: 0 0 auto;
+}
+
+.add-player-form button {
+  flex: 0 0 auto;
+}
+
+.database-player-picker {
+  width: min(1000px, 100%);
+  margin: 0 auto;
+  padding: 1rem 0 0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+
+  text-align: center;
+  background: var(--transparent-color);
+}
+
+.database-player-picker h3 {
+  margin-top: 0.5rem;
+}
+
+#database-player-search {
+  width: min(360px, 100%);
+}
+
+.database-players-list {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+}
+
+.database-player-chip {
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color-2);
+  background: var(--light-color-1);
+  color: var(--dark-color-1);
+}
+
+.database-player-chip:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* -------------------- Fix undefined variables used by newer inputs -------------------- */
+
+.ban-inputs input {
+  border: 1px solid var(--border-color-2);
+  background: var(--light-color-2);
+  color: var(--dark-color-1);
+}
+
+.champion-autocomplete-menu {
+  border: 1px solid var(--border-color-2);
+  background: var(--light-color-1);
+  box-shadow: 0 8px 24px var(--shadow-color-1);
+}
+
+/* -------------------- Mobile cleanup -------------------- */
+
+@media (max-width: 650px) {
+  .form-wrapper {
+    padding: 0 1rem;
+  }
+
+  .form-container {
+    width: 100%;
+    padding: 0;
+  }
+
+  .add-player-form {
+    width: 100%;
+  }
+
+  .add-player-form .newPlayerInput,
+  .add-player-form button {
+    width: 100%;
+    max-width: none;
+    flex-basis: 100%;
+  }
+
+  #newPlayerColor {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .database-player-chip {
+    width: 100%;
   }
 }

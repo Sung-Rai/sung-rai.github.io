@@ -1,4 +1,8 @@
 import { supabase } from "./supabaseClient.js";
+import {
+  getChampionIndex,
+  canonicalizeChampionName
+} from "./champions.js";
 
 const VALID_ROLES = new Set(["Top", "Jun", "Mid", "Adc", "Sup"]);
 
@@ -11,11 +15,19 @@ function normaliseStableKey(value) {
 }
 
 function getPlayerStableKey(player) {
+  if (player.stable_key) return normaliseStableKey(player.stable_key);
+  if (player.stableKey) return normaliseStableKey(player.stableKey);
+
+  const name = String(player.name ?? player.display_name ?? "").trim();
+
+  if (name) {
+    return normaliseStableKey(name);
+  }
+
   if (player.playerId) return normaliseStableKey(player.playerId);
   if (player.id) return normaliseStableKey(player.id);
-  if (player.name) return normaliseStableKey(player.name);
 
-  throw new Error("Player is missing id/name.");
+  throw new Error("Player is missing name/id.");
 }
 
 function cleanNullableNumber(value) {
@@ -28,9 +40,34 @@ function cleanNullableNumber(value) {
   return Math.max(0, Math.trunc(parsed));
 }
 
-function normaliseChampion(value) {
+function normaliseRequiredChampion(value, championIndex, context = "champion") {
   const cleaned = String(value ?? "").trim();
-  return cleaned.length > 0 ? cleaned : null;
+
+  if (!cleaned) {
+    throw new Error(`Missing ${context}.`);
+  }
+
+  const canonical = canonicalizeChampionName(cleaned, championIndex);
+
+  if (!canonical) {
+    throw new Error(`Invalid ${context}: ${cleaned}`);
+  }
+
+  return canonical;
+}
+
+function normaliseOptionalChampion(value, championIndex, context = "champion") {
+  const cleaned = String(value ?? "").trim();
+
+  if (!cleaned) return null;
+
+  const canonical = canonicalizeChampionName(cleaned, championIndex);
+
+  if (!canonical) {
+    throw new Error(`Invalid ${context}: ${cleaned}`);
+  }
+
+  return canonical;
 }
 
 function validateCompletedGame(game) {
@@ -84,6 +121,7 @@ async function upsertPlayers(players) {
 export async function saveCompletedGame(game) {
   validateCompletedGame(game);
 
+  const championIndex = await getChampionIndex();
   const playerMap = await upsertPlayers(game.players);
 
   const { data: insertedGame, error: gameError } = await supabase
@@ -113,7 +151,11 @@ export async function saveCompletedGame(game) {
       player_id: dbPlayer.id,
       team: player.team,
       role: player.role,
-      champion: normaliseChampion(player.champion),
+      champion: normaliseRequiredChampion(
+        player.champion,
+        championIndex,
+        `${player.name}'s champion`
+      ),
       kills: cleanNullableNumber(player.kills),
       deaths: cleanNullableNumber(player.deaths),
       assists: cleanNullableNumber(player.assists)
@@ -129,15 +171,19 @@ export async function saveCompletedGame(game) {
   const bans = Array.isArray(game.bans) ? game.bans : [];
 
   const banRows = bans
-    .map((ban, index) => ({
-      game_id: insertedGame.id,
-      team: ["A", "B"].includes(ban.team) ? ban.team : null,
-      champion: normaliseChampion(ban.champion),
-      ban_order: Number.isFinite(Number(ban.banOrder))
-        ? Number(ban.banOrder)
-        : index + 1
-    }))
-    .filter(row => row.champion);
+  .map((ban, index) => ({
+    game_id: insertedGame.id,
+    team: ["A", "B"].includes(ban.team) ? ban.team : null,
+    champion: normaliseOptionalChampion(
+      ban.champion,
+      championIndex,
+      `ban ${index + 1}`
+    ),
+    ban_order: Number.isFinite(Number(ban.banOrder))
+      ? Number(ban.banOrder)
+      : index + 1
+  }))
+  .filter(row => row.champion);
 
   if (banRows.length > 0) {
     const { error: bansError } = await supabase
@@ -185,6 +231,41 @@ export async function fetchGames() {
   if (error) throw error;
 
   return data ?? [];
+}
+
+export async function fetchPlayers() {
+  const { data, error } = await supabase
+    .from("players")
+    .select("id, stable_key, display_name, default_rating")
+    .order("display_name", { ascending: true });
+
+  if (error) throw error;
+
+  return data ?? [];
+}
+
+export async function updatePlayerDefaultRatings(updates) {
+  const cleanUpdates = updates
+    .filter(update => update.playerId)
+    .map(update => ({
+      playerId: update.playerId,
+      rating: Math.max(0, Math.min(100, Math.round(Number(update.rating))))
+    }))
+    .filter(update => Number.isFinite(update.rating));
+
+  await Promise.all(
+    cleanUpdates.map(update => {
+      return supabase
+        .from("players")
+        .update({ default_rating: update.rating })
+        .eq("id", update.playerId)
+        .then(({ error }) => {
+          if (error) throw error;
+        });
+    })
+  );
+
+  return cleanUpdates;
 }
 
 export async function importCompletedGames(games) {

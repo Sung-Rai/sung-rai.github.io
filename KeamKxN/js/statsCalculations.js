@@ -112,11 +112,35 @@ export function calculatePlayerStats(games) {
 }
 
 export function calculateChampionStats(games) {
-  const picks = new Map();
-  const bans = new Map();
+  const champions = new Map();
 
   let gamesWithPickData = 0;
   let gamesWithBanData = 0;
+  let gamesWithChampionData = 0;
+
+  function ensureChampion(championName) {
+    const champion = String(championName ?? "").trim();
+
+    if (!champion) return null;
+
+    const key = champion.toLowerCase();
+
+    if (!champions.has(key)) {
+      champions.set(key, {
+        champion,
+        picks: 0,
+        wins: 0,
+        bans: 0,
+        presenceGames: 0,
+        pickrate: 0,
+        banrate: 0,
+        presence: 0,
+        winrate: 0
+      });
+    }
+
+    return champions.get(key);
+  }
 
   for (const game of games) {
     const pickedChampionsThisGame = new Set();
@@ -129,21 +153,11 @@ export function calculateChampionStats(games) {
       if (!champion) continue;
 
       const key = champion.toLowerCase();
+      const stat = ensureChampion(champion);
+
+      if (!stat) continue;
 
       pickedChampionsThisGame.add(key);
-
-      if (!picks.has(key)) {
-        picks.set(key, {
-          champion,
-          picks: 0,
-          wins: 0,
-          pickrate: 0,
-          winrate: 0
-        });
-      }
-
-      const stat = picks.get(key);
-
       stat.picks += 1;
 
       if (row.team === game.winning_team) {
@@ -162,50 +176,57 @@ export function calculateChampionStats(games) {
       if (!champion) continue;
 
       const key = champion.toLowerCase();
+      const stat = ensureChampion(champion);
+
+      if (!stat) continue;
 
       bannedChampionsThisGame.add(key);
-
-      if (!bans.has(key)) {
-        bans.set(key, {
-          champion,
-          bans: 0,
-          banrate: 0
-        });
-      }
-
-      const stat = bans.get(key);
-
       stat.bans += 1;
     }
 
     if (bannedChampionsThisGame.size > 0) {
       gamesWithBanData += 1;
     }
+
+    // ---------- Presence ----------
+    const presentChampionsThisGame = new Set([
+      ...pickedChampionsThisGame,
+      ...bannedChampionsThisGame
+    ]);
+
+    if (presentChampionsThisGame.size > 0) {
+      gamesWithChampionData += 1;
+    }
+
+    for (const key of presentChampionsThisGame) {
+      const stat = champions.get(key);
+
+      if (stat) {
+        stat.presenceGames += 1;
+      }
+    }
   }
 
-  const pickStats = [...picks.values()]
+  const championStats = [...champions.values()]
     .map(stat => ({
       ...stat,
-
       pickrate: pct(stat.picks, gamesWithPickData),
-
+      banrate: pct(stat.bans, gamesWithBanData),
+      presence: pct(stat.presenceGames, gamesWithChampionData),
       winrate: pct(stat.wins, stat.picks)
     }))
-    .sort((a, b) => b.picks - a.picks || a.champion.localeCompare(b.champion));
+    .sort((a, b) => {
+      const totalA = a.picks + a.bans;
+      const totalB = b.picks + b.bans;
 
-  const banStats = [...bans.values()]
-    .map(stat => ({
-      ...stat,
-
-      banrate: pct(stat.bans, gamesWithBanData)
-    }))
-    .sort((a, b) => b.bans - a.bans || a.champion.localeCompare(b.champion));
+      return totalB - totalA || a.champion.localeCompare(b.champion);
+    });
 
   return {
-    picks: pickStats,
-    bans: banStats,
+    champions: championStats,
     gamesWithPickData,
-    gamesWithBanData
+    gamesWithBanData,
+    gamesWithChampionData
   };
 }
 

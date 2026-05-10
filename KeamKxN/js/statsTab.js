@@ -212,63 +212,58 @@ export async function refreshStats() {
 
 
     renderSortableTable(
-        "champion-pick-stats",
-        [
-            { key: "champion", label: "Champion" },
-            { key: "picks", label: "Picks" },
-            { key: "wins", label: "Wins" },
-            { key: "winrate", label: "Winrate" },
-            { key: "pickrate", label: "Pickrate" }
-        ],
-        championStats.picks.map(champ => ({
-            champion: {
-            displayValue: escapeHtml(champ.champion),
-            sortValue: champ.champion
-            },
-            picks: {
-            displayValue: champ.picks,
-            sortValue: champ.picks
-            },
-            wins: {
-            displayValue: champ.wins,
-            sortValue: champ.wins
-            },
-            winrate: {
-            displayValue: formatPercent(champ.winrate),
-            sortValue: champ.winrate
-            },
-            pickrate: {
-            displayValue: formatPercent(champ.pickrate),
-            sortValue: champ.pickrate
-            }
-        })),
-        "picks",
-        "desc"
-    );
-
-    renderSortableTable(
-        "champion-ban-stats",
-        [
-            { key: "champion", label: "Champion" },
-            { key: "bans", label: "Bans" },
-            { key: "banrate", label: "Banrate" }
-        ],
-        championStats.bans.map(champ => ({
-            champion: {
-            displayValue: escapeHtml(champ.champion),
-            sortValue: champ.champion
-            },
-            bans: {
-            displayValue: champ.bans,
-            sortValue: champ.bans
-            },
-            banrate: {
-            displayValue: formatPercent(champ.banrate),
-            sortValue: champ.banrate
-            }
-        })),
-        "bans",
-        "desc"
+      "champion-stats",
+      [
+        { key: "champion", label: "Champion" },
+        { key: "picks", label: "Picks" },
+        { key: "bans", label: "Bans" },
+        { key: "totalPresence", label: "Total" },
+        { key: "wins", label: "Wins" },
+        { key: "winrate", label: "Winrate" },
+        { key: "pickrate", label: "Pickrate" },
+        { key: "banrate", label: "Banrate" },
+        { key: "presence", label: "Presence" }
+      ],
+      championStats.champions.map(champ => ({
+        champion: {
+          displayValue: escapeHtml(champ.champion),
+          sortValue: champ.champion
+        },
+        picks: {
+          displayValue: champ.picks,
+          sortValue: champ.picks
+        },
+        bans: {
+          displayValue: champ.bans,
+          sortValue: champ.bans
+        },
+        totalPresence: {
+          displayValue: champ.picks + champ.bans,
+          sortValue: champ.picks + champ.bans
+        },
+        wins: {
+          displayValue: champ.wins,
+          sortValue: champ.wins
+        },
+        winrate: {
+          displayValue: champ.picks > 0 ? formatPercent(champ.winrate) : "—",
+          sortValue: champ.picks > 0 ? champ.winrate : -1
+        },
+        pickrate: {
+          displayValue: formatPercent(champ.pickrate),
+          sortValue: champ.pickrate
+        },
+        banrate: {
+          displayValue: formatPercent(champ.banrate),
+          sortValue: champ.banrate
+        },
+        presence: {
+          displayValue: formatPercent(champ.presence),
+          sortValue: champ.presence
+        }
+      })),
+      "totalPresence",
+      "desc"
     );
 
     renderRecentGames(games);
