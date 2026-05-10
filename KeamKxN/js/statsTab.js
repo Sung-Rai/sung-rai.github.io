@@ -3,6 +3,7 @@ import {
   calculateChampionStats,
   calculatePlayerStats
 } from "./statsCalculations.js";
+import { getChampionImageMap } from "./champions.js";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -189,6 +190,7 @@ export async function refreshStats() {
     const games = await fetchGames();
     const playerStats = calculatePlayerStats(games);
     const championStats = calculateChampionStats(games);
+    const championImageMap = await getChampionImageMap();
 
     renderTable(
         "player-stats",
@@ -224,9 +226,21 @@ export async function refreshStats() {
         { key: "banrate", label: "Banrate" },
         { key: "presence", label: "Presence" }
       ],
-      championStats.champions.map(champ => ({
+      championStats.champions.map(champ => {
+      const imageUrl = championImageMap.get(champ.champion.toLowerCase());
+
+      return {
         champion: {
-          displayValue: escapeHtml(champ.champion),
+          displayValue: `
+            <span class="champion-cell">
+              ${
+                imageUrl
+                  ? `<img src="${escapeHtml(imageUrl)}" alt="" class="champion-icon">`
+                  : ""
+              }
+              <span>${escapeHtml(champ.champion)}</span>
+            </span>
+          `,
           sortValue: champ.champion
         },
         picks: {
@@ -261,7 +275,8 @@ export async function refreshStats() {
           displayValue: formatPercent(champ.presence),
           sortValue: champ.presence
         }
-      })),
+      };
+    }),
       "totalPresence",
       "desc"
     );

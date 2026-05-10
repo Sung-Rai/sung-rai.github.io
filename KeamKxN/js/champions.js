@@ -15,7 +15,7 @@ const CHAMPION_ALIASES = {
   tf: "Twisted Fate",
   ww: "Warwick",
 };
-
+const CACHE_SCHEMA_VERSION = 2;
 let championIndexPromise = null;
 
 function normalizeSearch(value) {
@@ -28,11 +28,21 @@ function normalizeSearch(value) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function readCache() {
   try {
     const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
 
     if (!cached || !Array.isArray(cached.champions)) return null;
+    if (cached.schemaVersion !== CACHE_SCHEMA_VERSION) return null;
     if (Date.now() - cached.savedAt > CACHE_TTL_MS) return null;
 
     return cached;
@@ -46,6 +56,7 @@ function writeCache(champions) {
     localStorage.setItem(
       CACHE_KEY,
       JSON.stringify({
+        schemaVersion: CACHE_SCHEMA_VERSION,
         savedAt: Date.now(),
         champions
       })
@@ -127,13 +138,25 @@ async function fetchChampionIndex() {
     .map(champion => ({
       id: champion.id,
       key: champion.key,
-      name: champion.name
+      name: champion.name,
+      imageUrl: `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/img/champion/${champion.id}.png`
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
 
   writeCache(champions);
 
   return buildChampionIndex(champions);
+}
+
+export async function getChampionImageMap() {
+  const championIndex = await getChampionIndex();
+
+  return new Map(
+    championIndex.champions.map(champion => [
+      champion.name.toLowerCase(),
+      champion.imageUrl
+    ])
+  );
 }
 
 export function getChampionIndex() {
@@ -252,7 +275,27 @@ export function attachChampionAutocomplete(root, championIndex) {
 
     input.parentNode.insertBefore(wrapper, input);
     wrapper.appendChild(input);
+    const selectedIcon = document.createElement("img");
+    selectedIcon.className = "champion-input-icon";
+    selectedIcon.alt = "";
+    selectedIcon.hidden = true;
+    wrapper.appendChild(selectedIcon);
 
+    function setSelectedIcon(championName) {
+      const champion = championIndex.champions.find(item => {
+        return item.name === championName;
+      });
+
+      if (champion?.imageUrl) {
+        selectedIcon.src = champion.imageUrl;
+        selectedIcon.hidden = false;
+        wrapper.classList.add("has-champion-icon");
+      } else {
+        selectedIcon.removeAttribute("src");
+        selectedIcon.hidden = true;
+        wrapper.classList.remove("has-champion-icon");
+      }
+    }
     const menu = document.createElement("div");
     menu.className = "champion-autocomplete-menu";
     menu.hidden = true;
@@ -284,6 +327,7 @@ export function attachChampionAutocomplete(root, championIndex) {
     function chooseChampion(championName) {
       input.value = championName;
       input.setCustomValidity("");
+      setSelectedIcon(championName);
       menu.hidden = true;
       activeIndex = -1;
     }
@@ -304,7 +348,14 @@ export function attachChampionAutocomplete(root, championIndex) {
 
         button.type = "button";
         button.className = "champion-autocomplete-option";
-        button.textContent = champion.name;
+        button.innerHTML = `
+          ${
+            champion.imageUrl
+              ? `<img src="${escapeHtml(champion.imageUrl)}" alt="" class="champion-option-icon">`
+              : ""
+          }
+          <span>${escapeHtml(champion.name)}</span>
+        `;
 
         button.addEventListener("mousedown", event => {
           event.preventDefault();
@@ -321,6 +372,7 @@ export function attachChampionAutocomplete(root, championIndex) {
 
     input.addEventListener("input", () => {
       input.setCustomValidity("");
+      setSelectedIcon(null);
       renderSuggestions();
     });
 
@@ -358,10 +410,13 @@ export function attachChampionAutocomplete(root, championIndex) {
       if (canonical) {
         input.value = canonical;
         input.setCustomValidity("");
+        setSelectedIcon(canonical);
       } else if (input.value.trim()) {
         input.setCustomValidity("Enter a valid League of Legends champion.");
+        setSelectedIcon(null);
       } else {
         input.setCustomValidity("");
+        setSelectedIcon(null);
       }
 
       setTimeout(() => {
