@@ -44,6 +44,9 @@
         <button type="button" class="tab-button" data-tab="import" data-admin-only hidden>
             Import
         </button>
+        <button type="button" class="tab-button" data-tab="manual-game" data-admin-only hidden>
+            Add Game
+        </button>
     </nav>
 
 <section id="generator-tab" class="tab-panel active">
@@ -53,35 +56,17 @@
             
             <div class="naming-container full-bleed">
                 <label for="title">Draw Title</label>
-                <input
-                type="text"
-                id="title"
-                name="title"
-                placeholder="Enter a title"
-                required
-                />
+                <input type="text" id="title" placeholder="Enter a title" required value="5v5">
 
                 <div class="team-names">
                     <div class="team-name">
                         <label for="teamAName">Team A Name</label>
-                        <input
-                        type="text"
-                        id="teamAName"
-                        name="teamAName"
-                        placeholder="Enter Team A name"
-                        required
-                        />
+                        <input type="text" id="teamAName" placeholder="Enter Team A name" value="Blue Side">
                     </div>
 
                     <div class="team-name">
                         <label for="teamBName">Team B Name</label>
-                        <input
-                        type="text"
-                        id="teamBName"
-                        name="teamBName"
-                        placeholder="Enter Team B name"
-                        required
-                        />
+                        <input type="text" id="teamBName" placeholder="Enter Team B name" value="Red Side">
                     </div>
                 </div>
             </div>
@@ -199,6 +184,18 @@
     <textarea id="import-games-json" class="import-textarea" spellcheck="false"></textarea>
     <p id="import-status" class="muted">No import started.</p>
   </section>
+</section>
+<section id="manual-game-tab" class="tab-panel" data-admin-only hidden>
+  <div class="manual-game-page">
+    <header class="manual-game-page-header">
+      <h2>Add Game</h2>
+      <p class="muted">
+        Submit a completed game manually using database players, champion autocomplete, bans, and KDA.
+      </p>
+    </header>
+
+    <div id="manual-game-form"></div>
+  </div>
 </section>
 
 </body>
