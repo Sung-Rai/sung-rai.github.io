@@ -220,6 +220,27 @@ function normalizePlayerName(value) {
     .replace(/[^a-z0-9]+/g, "");
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function readNumberOrNull(input) {
+  const value = input?.value;
+
+  if (value === "" || value === null || value === undefined) {
+    return null;
+  }
+
+  const number = Number(value);
+
+  return Number.isFinite(number) ? number : null;
+}
+
 const PLAYER_COLORS = [
   "#ef4444",
   "#f97316",
@@ -353,6 +374,7 @@ async function loadDatabasePlayers() {
   try {
     databasePlayers = await fetchPlayers();
     renderDatabasePlayers();
+    renderManualGameForm();
   } catch (error) {
     console.warn("Could not load database players:", error.message);
   }
@@ -381,6 +403,11 @@ function clearAdminGeneratedUi() {
   if (resultsEl) {
     resultsEl.innerHTML = "";
     resultsEl.classList.add("hidden");
+  }
+
+  const manualGameForm = document.getElementById("manual-game-form");
+  if (manualGameForm) {
+    manualGameForm.innerHTML = "";
   }
 }
 
@@ -991,6 +1018,316 @@ function validateChampionDraftRules(players, bans) {
   }
 }
 
+// -------------------- Manual Add Game --------------------
+
+function getDatabasePlayerById(playerId) {
+  return databasePlayers.find(player => {
+    return String(player.id) === String(playerId);
+  });
+}
+
+function databasePlayerOptionsHtml() {
+  return databasePlayers
+    .map(player => {
+      const rating = Number.isFinite(Number(player.default_rating))
+        ? Number(player.default_rating)
+        : 50;
+
+      return `
+        <option value="${escapeHtml(player.id)}">
+          ${escapeHtml(player.display_name)} (${rating})
+        </option>
+      `;
+    })
+    .join("");
+}
+
+function createManualGamePlayerRow(team, role) {
+  const row = document.createElement("div");
+
+  row.className = "manual-game-row";
+  row.dataset.team = team;
+  row.dataset.role = role;
+
+  row.innerHTML = `
+    <strong>${role}</strong>
+
+    <select data-field="player" required>
+      <option value="">Select player</option>
+      ${databasePlayerOptionsHtml()}
+    </select>
+
+    <input data-field="champion" data-champion-input type="text" placeholder="Champion" required>
+
+    <input data-field="kills" type="number" min="0" placeholder="K">
+    <input data-field="deaths" type="number" min="0" placeholder="D">
+    <input data-field="assists" type="number" min="0" placeholder="A">
+  `;
+
+  return row;
+}
+
+function validateUniqueManualPlayers(players) {
+  const seen = new Map();
+
+  for (const player of players) {
+    const key = player.dbPlayerId
+      ? `db:${player.dbPlayerId}`
+      : `name:${normalizePlayerName(player.name)}`;
+
+    if (seen.has(key)) {
+      const firstPlayer = seen.get(key);
+
+      throw new Error(
+        `${player.name} has been selected more than once. ` +
+        `First selected as Team ${firstPlayer.team} ${firstPlayer.role}, ` +
+        `then as Team ${player.team} ${player.role}.`
+      );
+    }
+
+    seen.set(key, player);
+  }
+}
+
+function updateManualPlayerSelectDisabledStates(container) {
+  const selects = [...container.querySelectorAll("[data-field='player']")];
+  const selectedValues = new Set(
+    selects
+      .map(select => select.value)
+      .filter(Boolean)
+  );
+
+  for (const select of selects) {
+    for (const option of select.options) {
+      if (!option.value) continue;
+
+      option.disabled =
+        option.value !== select.value &&
+        selectedValues.has(option.value);
+    }
+  }
+}
+
+async function handleManualGameSubmit(event) {
+  event.preventDefault();
+
+  if (!adminMode) {
+    alert("Only the admin login can save completed games.");
+    return;
+  }
+
+  const form = event.currentTarget;
+  const button = form.querySelector("[data-manual-submit]");
+  const status = form.querySelector("[data-manual-status]");
+
+  try {
+    button.disabled = true;
+    status.textContent = "Submitting game...";
+
+    const title = form.querySelector("#manual-game-title").value.trim() || "Manual Game";
+    const playedAt = form.querySelector("#manual-game-date").value;
+    const winningTeam = form.querySelector("#manual-game-winner").value;
+    const notes = form.querySelector("#manual-game-notes").value.trim() || null;
+
+    if (!playedAt) {
+      throw new Error("Choose a game date.");
+    }
+
+    const championIndex = await getChampionIndex();
+
+    const submittedPlayers = [...form.querySelectorAll(".manual-game-row")].map(row => {
+      const playerId = row.querySelector("[data-field='player']").value;
+      const dbPlayer = getDatabasePlayerById(playerId);
+
+      if (!dbPlayer) {
+        throw new Error(`Missing player for Team ${row.dataset.team} ${row.dataset.role}.`);
+      }
+
+      const championInput = row.querySelector("[data-field='champion']");
+      const canonicalChampion = canonicalizeChampionName(championInput.value, championIndex);
+
+      if (!canonicalChampion) {
+        championInput.focus();
+        throw new Error(
+          `Invalid champion for ${dbPlayer.display_name}: ${championInput.value || "(empty)"}`
+        );
+      }
+
+      championInput.value = canonicalChampion;
+
+      return {
+        id: dbPlayer.id,
+        dbPlayerId: dbPlayer.id,
+        stableKey: dbPlayer.stable_key,
+        defaultRating: Number(dbPlayer.default_rating ?? 50),
+        name: dbPlayer.display_name,
+        team: row.dataset.team,
+        role: row.dataset.role,
+        champion: canonicalChampion,
+        kills: readNumberOrNull(row.querySelector("[data-field='kills']")),
+        deaths: readNumberOrNull(row.querySelector("[data-field='deaths']")),
+        assists: readNumberOrNull(row.querySelector("[data-field='assists']"))
+      };
+    });
+
+    validateUniqueManualPlayers(submittedPlayers);
+
+    const bans = [
+      ...parseBanInputs(form.querySelector("#manual-team-a-bans"), "A", championIndex),
+      ...parseBanInputs(form.querySelector("#manual-team-b-bans"), "B", championIndex)
+    ];
+
+    validateChampionDraftRules(submittedPlayers, bans);
+
+    await saveCompletedGame({
+      title,
+      playedAt,
+      winningTeam,
+      notes,
+      players: submittedPlayers,
+      bans
+    });
+
+    status.textContent = "Game submitted.";
+    button.textContent = "Submitted";
+
+    await refreshStats();
+  } catch (error) {
+    console.error(error);
+    status.textContent = `Submit failed: ${error.message}`;
+    button.disabled = false;
+  }
+}
+
+function renderManualGameForm() {
+  const container = document.getElementById("manual-game-form");
+
+  if (!container) return;
+
+  if (!adminMode) {
+    container.innerHTML = "";
+    return;
+  }
+
+  if (!databasePlayers.length) {
+    container.innerHTML = `<p class="muted">Database players have not loaded yet.</p>`;
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  container.innerHTML = `
+    <form id="manual-submit-game-form" class="manual-game-card">
+      <div class="manual-game-meta">
+        <label>
+          Game title
+          <input id="manual-game-title" type="text" value="Manual Game ${today}">
+        </label>
+
+        <label>
+          Game date
+          <input id="manual-game-date" type="date" value="${today}" required>
+        </label>
+
+        <label>
+          Winning team
+          <select id="manual-game-winner">
+            <option value="A">Team A</option>
+            <option value="B">Team B</option>
+          </select>
+        </label>
+
+        <label>
+          Notes
+          <textarea id="manual-game-notes" rows="3" placeholder="Optional notes"></textarea>
+        </label>
+      </div>
+
+      <div class="manual-game-grid">
+        <section class="manual-game-team">
+          <h3>Team A</h3>
+          <div class="manual-game-table-head">
+            <span>Role</span>
+            <span>Player</span>
+            <span>Champion</span>
+            <span>K</span>
+            <span>D</span>
+            <span>A</span>
+          </div>
+
+          <div id="manual-team-a-players"></div>
+
+          <h4>Team A bans</h4>
+          <div id="manual-team-a-bans" class="ban-inputs">
+            <input data-ban-input data-champion-input type="text" placeholder="Ban 1">
+            <input data-ban-input data-champion-input type="text" placeholder="Ban 2">
+            <input data-ban-input data-champion-input type="text" placeholder="Ban 3">
+            <input data-ban-input data-champion-input type="text" placeholder="Ban 4">
+            <input data-ban-input data-champion-input type="text" placeholder="Ban 5">
+          </div>
+        </section>
+
+        <section class="manual-game-team">
+          <h3>Team B</h3>
+          <div class="manual-game-table-head">
+            <span>Role</span>
+            <span>Player</span>
+            <span>Champion</span>
+            <span>K</span>
+            <span>D</span>
+            <span>A</span>
+          </div>
+          <div id="manual-team-b-players"></div>
+
+          <h4>Team B bans</h4>
+          <div id="manual-team-b-bans" class="ban-inputs">
+            <input data-ban-input data-champion-input type="text" placeholder="Ban 1">
+            <input data-ban-input data-champion-input type="text" placeholder="Ban 2">
+            <input data-ban-input data-champion-input type="text" placeholder="Ban 3">
+            <input data-ban-input data-champion-input type="text" placeholder="Ban 4">
+            <input data-ban-input data-champion-input type="text" placeholder="Ban 5">
+          </div>
+        </section>
+      </div>
+
+      <div class="post-game-actions">
+        <button data-manual-submit type="submit" class="selector">
+          Submit Game
+        </button>
+        <span data-manual-status class="submit-status"></span>
+      </div>
+    </form>
+  `;
+
+  const teamAPlayers = container.querySelector("#manual-team-a-players");
+  const teamBPlayers = container.querySelector("#manual-team-b-players");
+
+  for (const role of ROLE_KEYS) {
+    teamAPlayers.appendChild(createManualGamePlayerRow("A", role));
+    teamBPlayers.appendChild(createManualGamePlayerRow("B", role));
+  }
+
+  container.querySelectorAll("[data-field='player']").forEach(select => {
+    select.addEventListener("change", () => {
+      updateManualPlayerSelectDisabledStates(container);
+    });
+  });
+
+  updateManualPlayerSelectDisabledStates(container);
+
+  getChampionIndex()
+    .then(championIndex => {
+      attachChampionAutocomplete(container, championIndex);
+    })
+    .catch(error => {
+      console.warn("Champion autocomplete unavailable:", error.message);
+    });
+
+  container
+    .querySelector("#manual-submit-game-form")
+    .addEventListener("submit", handleManualGameSubmit);
+}
+
 // -------------------- Team Generation --------------------
 
 function generatePlayersFromSliders() {
@@ -1181,6 +1518,10 @@ document.addEventListener("click", (e) => {
 // -------------------- Initialize --------------------
 window.addEventListener("load", () => {
   ensureDefaultPreset();
+});
+
+document.querySelector("[data-tab='manual-game']")?.addEventListener("click", () => {
+  renderManualGameForm();
 });
 
 setupStatsTab({
