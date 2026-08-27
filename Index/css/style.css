@@ -18,6 +18,8 @@
 
   --border: rgba(112, 130, 84, 0.24);
 
+  --title-outline: #000000;
+
   --page-width: 1180px;
   --card-radius: 18px;
 }
@@ -86,7 +88,7 @@ a:focus-visible {
 
   color: #000000;
   -webkit-text-fill-color: var(--lemon);
-  -webkit-text-stroke: 2px;
+  -webkit-text-stroke: clamp(1px, 0.025em, 2px) var(--title-outline);
   font-size: clamp(3rem, 9vw, 6.5rem);
   font-weight: 800;
   line-height: 0.95;
