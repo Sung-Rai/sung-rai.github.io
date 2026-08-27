@@ -17,8 +17,15 @@
   --gold-dark: #806000;
 
   --border: rgba(112, 130, 84, 0.24);
+  --card-shadow: 0 14px 38px rgba(68, 86, 57, 0.1);
+  --card-hover-shadow: 0 20px 48px rgba(68, 86, 57, 0.15);
 
   --title-outline: #000000;
+  --eyebrow-text: #587019;
+  --heading-link-hover: #477f50;
+  --more-text: #405229;
+  --more-background: #ffffff;
+  --more-hover-text: #263014;
 
   --page-width: 1180px;
   --card-radius: 18px;
@@ -72,7 +79,7 @@ a:focus-visible {
   margin: 0 0 16px;
   padding: 7px 13px;
 
-  color: #587019;
+  color: var(--eyebrow-text);
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -84,15 +91,18 @@ a:focus-visible {
 }
 
 .site-header h1 {
+  max-width: 100%;
   margin: 0;
-
-  color: #000000;
+  color: var(--title-outline);
   -webkit-text-fill-color: var(--lemon);
   -webkit-text-stroke: clamp(1px, 0.025em, 2px) var(--title-outline);
   font-size: clamp(3rem, 9vw, 6.5rem);
   font-weight: 800;
   line-height: 0.95;
   letter-spacing: -0.065em;
+  overflow-wrap: normal;
+  paint-order: stroke fill;
+  text-wrap: balance;
 }
 
 .intro {
@@ -133,7 +143,7 @@ a:focus-visible {
   background: var(--card-background);
   border: 1px solid var(--border);
   border-radius: var(--card-radius);
-  box-shadow: 0 14px 38px rgba(68, 86, 57, 0.1);
+  box-shadow: var(--card-shadow);
 }
 
 /* Alternating card colors */
@@ -165,7 +175,7 @@ a:focus-visible {
   transform: translateY(-5px);
   background: var(--card-hover);
   border-color: var(--card-accent);
-  box-shadow: 0 20px 48px rgba(68, 86, 57, 0.15);
+  box-shadow: var(--card-hover-shadow);
 }
 
 /* Project headings */
@@ -190,7 +200,7 @@ a:focus-visible {
 }
 
 .project-heading h3 a:hover {
-  color: #477f50;
+  color: var(--heading-link-hover);
   text-decoration-color: var(--card-accent);
 }
 
@@ -234,7 +244,7 @@ a:focus-visible {
 }
 
 .project-description a:hover {
-  color: #3f7f4b;
+  color: var(--heading-link-hover);
   text-decoration-color: var(--leaf);
 }
 
@@ -249,13 +259,13 @@ a:focus-visible {
   margin-top: auto;
   padding: 9px 15px;
 
-  color: #405229;
+  color: var(--more-text);
   font: inherit;
   font-size: 0.84rem;
   font-weight: 750;
   text-decoration: none;
 
-  background: #ffffff;
+  background: var(--more-background);
   border: 1px solid var(--card-accent);
   border-radius: 999px;
 
@@ -263,7 +273,7 @@ a:focus-visible {
 }
 
 .project-more:hover {
-  color: #263014;
+  color: var(--more-hover-text);
   background: var(--card-accent);
   border-color: var(--card-accent);
   box-shadow: 0 7px 18px rgba(79, 105, 56, 0.16);
@@ -300,7 +310,11 @@ a:focus-visible {
 
 @media (max-width: 420px) {
   .site-header h1 {
-    font-size: 3rem;
+    font-size: clamp(2.45rem, 13vw, 3rem);
+    line-height: 1;
+    letter-spacing: -0.035em;
+    white-space: nowrap;
+    -webkit-text-stroke-width: 1px;
   }
 
   .project-heading h3 {
