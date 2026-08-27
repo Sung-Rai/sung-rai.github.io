@@ -134,12 +134,6 @@ a:focus-visible {
   border: 1px solid var(--border);
   border-radius: var(--card-radius);
   box-shadow: 0 14px 38px rgba(68, 86, 57, 0.1);
-
-  transition:
-    transform 180ms ease,
-    border-color 180ms ease,
-    background-color 180ms ease,
-    box-shadow 180ms ease;
 }
 
 /* Alternating card colors */
@@ -193,10 +187,6 @@ a:focus-visible {
   text-decoration-color: transparent;
   text-decoration-thickness: 2px;
   text-underline-offset: 5px;
-
-  transition:
-    color 160ms ease,
-    text-decoration-color 160ms ease;
 }
 
 .project-heading h3 a:hover {
@@ -241,10 +231,6 @@ a:focus-visible {
   text-decoration-color: rgba(128, 96, 0, 0.4);
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
-
-  transition:
-    color 160ms ease,
-    text-decoration-color 160ms ease;
 }
 
 .project-description a:hover {
@@ -274,13 +260,6 @@ a:focus-visible {
   border-radius: 999px;
 
   cursor: pointer;
-
-  transition:
-    color 160ms ease,
-    background-color 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    transform 160ms ease;
 }
 
 .project-more:hover {
