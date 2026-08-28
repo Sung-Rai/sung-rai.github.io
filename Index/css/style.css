@@ -31,6 +31,36 @@
   --card-radius: 18px;
 }
 
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: #101611;
+  --card-background: #182019;
+  --card-hover: #1d281f;
+
+  --text: #edf3ee;
+  --muted: #acb8ae;
+  --description: #c7d0c8;
+
+  --lemon: #f3d64f;
+  --lemon-soft: #2c321a;
+  --lime: #b4d961;
+  --leaf: #75c983;
+  --gold: #dcae3c;
+  --gold-dark: #f0c85b;
+
+  --border: rgba(198, 219, 177, 0.16);
+  --card-shadow: 0 14px 38px rgba(0, 0, 0, 0.3);
+  --card-hover-shadow: 0 20px 48px rgba(0, 0, 0, 0.42);
+
+  --title-outline: #070a08;
+  --eyebrow-text: #d7e89f;
+  --heading-link-hover: #9cdaa6;
+  --more-text: #dce7c4;
+  --more-background: #202a21;
+  --more-hover-text: #162015;
+}
+
 /* Reset */
 
 *,
