@@ -35,6 +35,9 @@
     const updateToggle = () => {
       const isDark = root.dataset.theme === "dark";
 
+      toggle.querySelector(".theme-toggle__icon").textContent =
+        isDark ? "☀" : "☾";
+
       toggle.setAttribute("aria-pressed", String(isDark));
       toggle.setAttribute(
         "aria-label",
