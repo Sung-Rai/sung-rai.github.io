@@ -3,24 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- EDIT: update the title and description for each project. -->
   <title>Project title — Nemsung Rai</title>
   <meta name="description" content="This is a relevant description of an interesting project." />
-
-  <script src="../js/script.js"></script>
   <link rel="stylesheet" href="../css/style.css" />
   <link rel="stylesheet" href="../css/project.css" />
-  <script src="../js/project.js" defer></script>
+  <script src="../js/script.js" defer></script>
 </head>
 <body>
-
-  <header>
+  <header class="project-nav">
+    <a href="../../index.html">← Back to projects</a>
+    <button class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+      <span class="theme-toggle__icon" aria-hidden="true">☾</span>
+      <span class="theme-toggle__label">Dark mode</span>
+    </button>
   </header>
 
-  <main>
+  <main class="project-article">
+    <header>
+      <p class="eyebrow">Project write-up</p>
+      <h1>Project title</h1>
+      <p class="project-summary">
+        Sometimes, the project was the friends we made along the way.
+      </p>
+      <p class="project-meta"><strong>Built with:</strong> Skill, passion, and other things.</p>
+      <!-- Optional: add a link to your project's GitHub repository here. -->
+    </header>
+
+    <figure class="project-image">
+      <div class="image-placeholder">Project screenshot</div>
+      <figcaption>Above shows a yellow square with writing in the middle.</figcaption>
+    </figure>
+
+    <section>
+      <h2>Heading</h2>
+      <p>
+        Lorem ipsum et dolor something and something else that I am not spending
+        the time to google and find a generator for text to be written here because
+        my normal typing speed is relatively quick and I enjoy typing long passages
+        that don't really detail anything in particular.
+      </p>
+      <ul>
+        <li>I heard that adding lists makes things.</li>
+        <li>Look like a more realistic piece of article.</li>
+      </ul>
+    </section>
+
+    <section class="project-note">
+      <h2>Project Note</h2>
+      <p>
+        Have you ever opened a CGP GCSE book and saw the little notes
+        that they have at certain places in the book? Well, I thought they
+        were pretty cool and informative, so here is mine.
+      </p>
+    </section>
+
+    <section>
+      <h2>Conclusion</h2>
+      <p>
+        A conclusion is probably a good way to conclude something.
+      </p>
+    </section>
   </main>
 
-  <footer>
+  <footer class="project-footer">
+    Foot
   </footer>
 </body>
 </html>

@@ -1,0 +1,136 @@
+.project-nav,
+.project-article,
+.project-footer {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Back link on the left, theme button on the right. */
+.project-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 28px 0;
+}
+
+.project-nav a {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.project-nav a:hover {
+  text-decoration: underline;
+}
+
+.project-nav .theme-toggle {
+  position: static;
+}
+
+/* Colors come from shared theme. */
+.project-article {
+  padding: 36px;
+  background: var(--card-background);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--lemon);
+  border-radius: 12px;
+  box-shadow: var(--card-shadow);
+  line-height: 1.8;
+  overflow-wrap: break-word;
+}
+
+.project-article h1 {
+  margin: 0 0 12px;
+  font-size: 2.75rem;
+  line-height: 1.2;
+}
+
+.project-article h2 {
+  margin: 0 0 12px;
+  font-size: 1.4rem;
+}
+
+.project-article p {
+  margin: 0 0 16px;
+}
+
+.project-summary {
+  color: var(--description);
+  font-size: 1.1rem;
+}
+
+.project-meta,
+.project-image figcaption {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.project-article section {
+  margin-top: 32px;
+}
+
+.project-article ul {
+  padding-left: 20px;
+}
+
+.project-article li {
+  margin-bottom: 8px;
+}
+
+/* Placedholder rn */
+.project-image {
+  margin: 28px 0;
+}
+
+.project-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.image-placeholder {
+  padding: 70px 20px;
+  background: var(--lemon-soft);
+  color: var(--gold-dark);
+  border: 1px dashed var(--gold);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.project-image figcaption {
+  margin-top: 10px;
+}
+
+/* Note */
+.project-note {
+  padding: 20px;
+  background: var(--lemon-soft);
+  border-left: 4px solid var(--gold);
+  border-radius: 0 8px 8px 0;
+}
+
+.project-note p {
+  margin-bottom: 0;
+}
+
+.project-footer {
+  padding-top: 24px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .project-article {
+    padding: 22px;
+  }
+
+  .project-article h1 {
+    font-size: 2rem;
+  }
+
+  .project-nav {
+    padding: 20px 0;
+  }
+}
