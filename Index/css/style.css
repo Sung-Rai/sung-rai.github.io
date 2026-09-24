@@ -190,13 +190,6 @@ a:focus-visible {
   color: var(--gold-dark);
 }
 
-:root[data-theme="dark"] .theme-toggle__icon {
-  background: transparent;
-  border-color: var(--text);
-  box-shadow: -5px -3px 0 -1px var(--background) inset;
-  transform: rotate(-18deg);
-}
-
 /* Project grid */
 
 .project-grid {
@@ -368,7 +361,7 @@ a:focus-visible {
   transform: translateY(0);
 }
 
-/* Media Queriy */
+/* Media Query */
 
 @media (max-width: 760px) {
   body {
