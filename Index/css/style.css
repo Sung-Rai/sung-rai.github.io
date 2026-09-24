@@ -185,21 +185,9 @@ a:focus-visible {
 }
 
 .theme-toggle__icon {
-  position: relative;
-
-  width: 18px;
-  height: 18px;
-
-  background: var(--lemon);
-  border: 2px solid var(--gold-dark);
-  border-radius: 50%;
-}
-
-:root[data-theme="dark"] .theme-toggle__icon {
-  background: transparent;
-  border-color: var(--text);
-  box-shadow: -5px -3px 0 -1px var(--background) inset;
-  transform: rotate(-18deg);
+  font-size: 20px;
+  line-height: 1;
+  color: var(--gold-dark);
 }
 
 /* Project grid */
@@ -373,7 +361,7 @@ a:focus-visible {
   transform: translateY(0);
 }
 
-/* Media Queriy */
+/* Media Query */
 
 @media (max-width: 760px) {
   body {
