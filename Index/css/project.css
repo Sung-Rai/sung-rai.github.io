@@ -59,7 +59,6 @@
   font-size: 1.1rem;
 }
 
-.project-meta,
 .project-image figcaption {
   color: var(--muted);
   font-size: 0.9rem;
@@ -84,8 +83,10 @@
 
 .project-image img {
   display: block;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
+  margin: 0 auto;
   border-radius: 8px;
 }
 
@@ -120,6 +121,18 @@
   font-size: 0.9rem;
   text-align: center;
 }
+
+.project-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.project-tags .eyebrow {
+  margin: 0;
+}
+
 
 @media (max-width: 600px) {
   .project-article {

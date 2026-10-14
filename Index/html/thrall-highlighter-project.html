@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thrall Highlighter — Nemsung Rai</title>
+  <meta name="description" content="An official Runelite Plugin to hide and outline thralls." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/project.css" />
+  <script src="../js/script.js" defer></script>
+</head>
+<body>
+  <header class="project-nav">
+    <a href="../../index.html">← Back to projects</a>
+    <button class="theme-toggle" type="button" aria-label="Switch to dark mode" aria-pressed="false">
+      <span class="theme-toggle__icon" aria-hidden="true">☾</span>
+      <span class="theme-toggle__label">Dark mode</span>
+    </button>
+  </header>
+
+  <main class="project-article">
+    <header>
+      <div class="project-tags">
+        <span class="eyebrow">Java</span>
+        <span class="eyebrow">RuneLite</span>
+        <span class="eyebrow">API</span>
+      </div>
+      <h1>Thrall Highlighter</h1>
+      <p class="project-summary">
+        An official Runelite Plugin to hide and outline thralls.
+      </p>
+      <!-- Optional: add a link to your project's GitHub repository here. -->
+    </header>
+
+    <figure class="project-image">
+      <img src="../assets/example-clutter.png" alt="Three players are fighting an enemy in Old School Runescape. Two thralls are summoned and highlighted."/>
+      <figcaption>Thralls being hidden and outlined, allowing the player to more easily identify safe tiles underneath the thrall.</figcaption>
+    </figure>
+
+    <section>
+      <h2>Description</h2>
+
+      <p>
+        The Thrall Highlighter plugin is an officially approved RuneLite plugin written in Java that uses the RuneLite API to hide and outline
+        summoned thralls in the game. This plugin is often useful for players who need that extra bit of clarity.
+      </p>
+      <p>
+        The thrall highlighter plugin exists as a better fork of two separate plugins that when combined and configured,
+        could replicate the same functionality.
+        The two plugins are <a href="https://github.com/runelite/runelite/wiki/Entity-Hider">Entity Hider</a> 
+        and <a href="https://runelite.net/plugin-hub/show/better-npc-highlight">Better NPC Highlight</a>.
+      </p>
+
+      <h2>Problems with previous solutions</h2>
+      <p>
+        There were a couple problems players had when using 'Entity Hider' and 'Better NPC Highlight' that motivated development.
+      </p>
+
+      <h3>Set-Up</h3>
+      <p> 
+        The first major problem was that new players who wanted to hide and outline thralls, could not easily 
+        find and do so searching the plugin hub. Here are three separate Reddit 
+        threads posted by people looking for answers. This does not include other players who can sometimes be found writing similar questions 
+        elsewhere, such as in a Youtube video's comment section.
+      </p>
+      <ul>
+        <li><a href="https://www.reddit.com/r/2007scape/comments/1269ly1/outline_for_hidden_thrall/">Outline for hidden thrall - 30/03/2023</a></li>
+        <li><a href="https://www.reddit.com/r/2007scape/comments/1j1mfts/thrall_hider_and_outline/">Thrall hider and outline - 02/03/2025</a></li>
+        <li><a href="https://www.reddit.com/r/2007scape/comments/1lciu6d/thrall_outline/">Thrall outline - 16/06/2025</a></li>
+      </ul>
+      <p>
+        Players would have to configure their entity hider plugin to hide thralls, and then find the NPC id's of the thralls they wanted to outline,
+        and then find and paste the id's into the correct configuration setting for the NPC highlight plugin. Now, with a single install, 
+        thrall highlighter is the second thing that appears when searching for 'thrall' in the plugin hub. It uses RuneLite's .property file to
+        show up when searching for "thrall, hide, outline, highlight, visual".
+      </p>
+      <figure class="project-image">
+        <img src="..\assets\runelite-thrall-highlighter-search.png" alt="RuneLite plugin hub. The search bar has 'thrall' entered. Three results are shown: 'Thrall damage co...', 'Thrall Highlighter', 'Thrall Check'."/>
+        <figcaption>RuneLite plugin hub search result for 'thrall'</figcaption>
+      </figure>
+
+      <h3>Configurability</h3>
+      <p>
+        Whilst more of a minor inconvenience than a major problem, the ability to high/outline being so tied in with the two configuration was problematic.
+        For example, when a player wanted to players and hide thralls, they would use the entity hider plugin. However, if they wanted to unhide players but
+        keep thralls hidden, they would have to manually go into the plugin settings, and uncheck the player option.
+      </p>
+      <p>
+        Likewise with the NPC highlight configs.
+      </p>
+      <figure class="project-image">
+        <img src="..\assets\runelite-better-npc-highlight-config.png" alt="A long list of settings and configuration options for the 'better npc highlight' plugin. Halfway down, the dropdown menu is open for the 'outline' section, with some ID values displayed."/>
+        <figcaption>A reasonable configuration menu for the 'Better NPC Highlight' plugin.</figcaption>
+      </figure>
+      <p>
+        As fun as option-exploring is, some may describe it as a tedious activity. Especially for a menu as expertly detailed as the one above.
+      </p>
+      
+      <h2>Development</h2>
+      <p>
+        Due to the extensive API documentation and development guidelines, development was very smooth. The plugin was
+        created using the given <a href="https://github.com/runelite/example-plugin">official template</a>. The extensively 
+        detailed <a href="https://github.com/runelite/runelite/wiki/Developer-Guide">development guide</a> explained what guidelines to follow,
+        how to test the plugin, and how to submit it for official approval.
+      </p>
+      <p>
+        The guide even detailed how to write login credentials to a file to allow testing of the plugin with the enhanced security features that
+        come with the newer Jagex accounts.
+      </p>
+      <p>
+        As of now, the plugin has two new features. The first of which allows you to choose a different outline color for each type of thrall.
+        The second feature, described as a 'fun option', allows you to randomize the outline color of the summoned thrall.
+      </p>
+
+      <h2>Future Ideas</h2>
+      <p>
+        The most important feature idea to be implemented is the possibility of showing the player's own thrall, but hiding other players' thralls.
+        The problem with this at the moment is that the RuneLite API does not expose any accessibile information of who a thrall belongs to, or who
+        summoned it, therefore the feature would require work-around solutions, such as checking targeting/movement of the thrall.
+      </p>
+      <figure class="project-image">
+        <img src="../assets/td-thralls.png" alt="
+                                                  Two players fighting enemies in Old School Runescape, and a third player to the side. Two different
+                                                  thralls are summoned and highlighted."/>
+        <figcaption>Two thralls being hidden and outlined. The ownership can be guessed by considering their behavior, proximity, or aggression.</figcaption>
+      </figure>
+    </section>
+
+    <section class="project-note">
+      <h2>Links</h2>
+      <p>
+        <a href="https://github.com/Sung-Rai/thrall-highlighter">GitHub Repository</a><br/>
+        <a href="https://runelite.net/plugin-hub/show/thrall-highlighter">Plugin Hub</a>
+      </p>
+    </section>
+
+    <section>
+      <h2>Conclusion</h2>
+      <p>
+        As of writing, the plugin is comfortably sitting around ~7000 active installs. Growth was steady, but is now beginning to plateau. Older veteran
+        players probably already have the prior two plugins configured to how they need, and don't need the plugin, so extra convenient features would be
+        needed if I wanted to steal from that pool of players.
+      </p>
+    </section>
+  </main>
+
+  <footer class="project-footer">
+    Written on 14/10/2026
+  </footer>
+</body>
+</html>
