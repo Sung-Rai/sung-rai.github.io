@@ -1,7 +1,8 @@
-import { fetchGames } from "./statsApi.js";
+import { fetchGames, updateMatchRoles } from "./statsApi.js";
 import {
   calculateChampionStats,
-  calculatePlayerStats
+  calculatePlayerStats,
+  ROLE_ORDER
 } from "./statsCalculations.js";
 import { getChampionImageMap } from "./champions.js";
 
@@ -174,6 +175,9 @@ function renderTable(containerId, headers, rows) {
   `;
 }
 
+let canEditMatchRoles = () => false;
+let recentGameLimit = 20;
+
 function renderRecentGames(games, championImageMap) {
   const container = document.getElementById("recent-games");
 
@@ -184,10 +188,25 @@ function renderRecentGames(games, championImageMap) {
     return;
   }
 
-  container.innerHTML = games
-    .slice(0, 20)
-    .map(game => renderRecentGameCard(game, championImageMap))
-    .join("");
+  let visible = 0;
+  const more = document.createElement("button");
+  more.type = "button";
+  more.textContent = "Show older games";
+
+  const showMore = () => {
+    more.remove();
+    container.insertAdjacentHTML("beforeend", games.slice(visible, recentGameLimit)
+      .map(game => renderRecentGameCard(game, championImageMap)).join(""));
+    visible = recentGameLimit;
+    if (visible < games.length) container.append(more);
+  };
+
+  container.replaceChildren();
+  more.addEventListener("click", () => {
+    recentGameLimit += 20;
+    showMore();
+  });
+  showMore();
 }
 
 function getSortableCellValue(cell) {
@@ -455,18 +474,77 @@ export async function refreshStats() {
     if (status) {
       status.textContent = `${games.length} saved game${games.length === 1 ? "" : "s"} loaded.`;
     }
+    return true;
   } catch (error) {
     console.error(error);
 
     if (status) {
       status.textContent = `Could not load stats: ${error.message}`;
     }
+    return false;
+  } finally {
+    enableStatsTableSorting(document.getElementById("stats-tab") || document);
   }
-  enableStatsTableSorting(document.getElementById("stats-tab") || document);
 }
 
 export function setupStatsTab(options = {}) {
   const canUseAdminFeatures = options.canUseAdminFeatures || (() => false);
+  canEditMatchRoles = canUseAdminFeatures;
+  const history = document.getElementById("recent-games");
+  history?.addEventListener("click", event => {
+    const action = event.target.closest("[data-open-role-editor], [data-close-role-editor]");
+    if (!action) return;
+
+    if (action.hasAttribute("data-close-role-editor")) {
+      action.closest("dialog").close();
+    } else if (canEditMatchRoles()) {
+      const editor = action.closest(".match-history-card").querySelector("dialog");
+      editor.querySelector("form").reset();
+      editor.querySelector("[role='status']").textContent = "";
+      editor.showModal();
+    }
+  });
+  history?.addEventListener("cancel", event => {
+    if (event.target.querySelector("[type='submit']:disabled")) event.preventDefault();
+  }, true);
+  history?.addEventListener("submit", async event => {
+    const form = event.target;
+    if (!form.matches("[data-role-editor]")) return;
+    event.preventDefault();
+    if (!canEditMatchRoles()) return;
+
+    const button = form.querySelector("[type='submit']");
+    if (button.disabled) return;
+    const cancel = form.querySelector("[data-close-role-editor]");
+    const status = form.querySelector("[role='status']");
+    const assignments = [...form.querySelectorAll("select")].map(select => ({
+      id: select.name,
+      role: select.value || null
+    }));
+
+    button.disabled = true;
+    cancel.disabled = true;
+    status.textContent = "Saving roles…";
+    try {
+      const revision = await updateMatchRoles(form.dataset.matchId, Number(form.dataset.revision), assignments);
+      form.dataset.revision = revision;
+      status.textContent = "Roles saved.";
+      if (await refreshStats()) {
+        document.getElementById(`edit-roles-${form.dataset.matchId}`)?.focus();
+        const statsStatus = document.getElementById("stats-status");
+        if (statsStatus) statsStatus.textContent = "Roles saved. Statistics updated.";
+      } else {
+        form.closest("dialog").close();
+      }
+    } catch (error) {
+      status.textContent = error.code === "23505"
+        ? "Assign each role at most once per team."
+        : error.message;
+    } finally {
+      button.disabled = false;
+      cancel.disabled = false;
+    }
+  });
   document.querySelectorAll("[data-tab]").forEach(button => {
     button.addEventListener("click", async () => {
       const selectedTab = button.dataset.tab;
@@ -498,7 +576,11 @@ export function setupStatsTab(options = {}) {
   document.getElementById("refresh-champion-stats-btn")?.addEventListener("click", refreshStats);
 }
 
-const MATCH_HISTORY_ROLES = ["Top", "Jun", "Mid", "Adc", "Sup"];
+export function roleOptionsHtml(selected) {
+  return `<option value="">Unassigned</option>` + ROLE_ORDER.map(role =>
+    `<option value="${role}"${role === selected ? " selected" : ""}>${role}</option>`
+  ).join("");
+}
 
 function hasStatValue(value) {
   return value !== null && value !== undefined && value !== "";
@@ -526,6 +608,7 @@ function getGamePlayersForHistory(game) {
 
   return rows.map(row => {
     return {
+      id: row.id,
       team: row.team,
       role: row.role,
       name:
@@ -554,19 +637,10 @@ function getGameBansForHistory(game) {
   });
 }
 
-function getPlayersByRole(players, team) {
-  const teamPlayers = (players ?? []).filter(player => player.team === team);
-
-  return MATCH_HISTORY_ROLES.map(role => {
-    return teamPlayers.find(player => player.role === role) ?? {
-      role,
-      name: null,
-      champion: null,
-      kills: null,
-      deaths: null,
-      assists: null
-    };
-  });
+function getTeamPlayers(players, team) {
+  const rank = player => player.role == null ? ROLE_ORDER.length : ROLE_ORDER.indexOf(player.role);
+  return players.filter(player => player.team === team)
+    .sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
 }
 
 function renderChampionPill(championName, championImageMap) {
@@ -594,13 +668,15 @@ function renderChampionPill(championName, championImageMap) {
 }
 
 function renderTeamMatchRows(players, team, championImageMap) {
-  const rolePlayers = getPlayersByRole(players, team);
+  const rolePlayers = getTeamPlayers(players, team);
 
   return rolePlayers
     .map(player => {
       return `
         <div class="match-player-row">
-          <span class="match-role">${escapeHtml(player.role)}</span>
+          <span class="match-role" title="${player.role == null ? "Unassigned" : ""}">${player.role == null
+            ? '<span aria-label="Unassigned">—</span>'
+            : escapeHtml(player.role)}</span>
           <span class="match-player-name">${formatOptionalValue(player.name)}</span>
           ${renderChampionPill(player.champion, championImageMap)}
           <span class="match-kda">${formatOptionalKda(player)}</span>
@@ -608,6 +684,32 @@ function renderTeamMatchRows(players, team, championImageMap) {
       `;
     })
     .join("");
+}
+
+function renderRoleEditor(game, players) {
+  return `
+    <dialog class="match-role-editor" aria-labelledby="role-editor-title-${escapeHtml(game.id)}">
+      <form data-role-editor data-match-id="${escapeHtml(game.id)}" data-revision="${escapeHtml(game.role_revision)}">
+        <h4 id="role-editor-title-${escapeHtml(game.id)}">Edit roles</h4>
+        <div class="match-role-teams">
+          ${["A", "B"].map(team => `
+            <fieldset>
+              <legend>Team ${team}</legend>
+              ${getTeamPlayers(players, team).map(player => `
+                <label>
+                  <span>${escapeHtml(player.name)}</span>
+                  <select name="${escapeHtml(player.id)}">${roleOptionsHtml(player.role)}</select>
+                </label>`).join("")}
+            </fieldset>`).join("")}
+        </div>
+        <div class="match-role-actions">
+          <button type="button" class="selector" data-close-role-editor>Cancel</button>
+          <button type="submit" class="selector">Save roles</button>
+        </div>
+        <span role="status" class="muted"></span>
+      </form>
+    </dialog>
+  `;
 }
 
 function renderBanSlots(bans, team, championImageMap) {
@@ -645,6 +747,7 @@ function renderRecentGameCard(game, championImageMap) {
   const playedAt = game.playedAt ?? game.played_at ?? game.created_at ?? "Unknown date";
   const players = getGamePlayersForHistory(game);
   const bans = getGameBansForHistory(game);
+  const canEdit = canEditMatchRoles() && players.length > 0;
 
   const winClass =
     winningTeam === "A"
@@ -661,9 +764,13 @@ function renderRecentGameCard(game, championImageMap) {
           <p>${escapeHtml(String(playedAt).slice(0, 10))}</p>
         </div>
 
-        <span class="match-result-badge">
-          ${winningTeam ? `Team ${escapeHtml(winningTeam)} Win` : "Result unknown"}
-        </span>
+        <div class="match-history-actions">
+          <span class="match-result-badge">
+            ${winningTeam ? `Team ${escapeHtml(winningTeam)} Win` : "Result unknown"}
+          </span>
+          ${canEdit ? `<button type="button" id="edit-roles-${escapeHtml(game.id)}"
+            class="match-role-trigger" data-open-role-editor aria-haspopup="dialog">Edit roles</button>` : ""}
+        </div>
       </header>
 
       <div class="match-history-body">
@@ -709,6 +816,7 @@ function renderRecentGameCard(game, championImageMap) {
           </div>
         </section>
       </div>
+      ${canEdit ? renderRoleEditor(game, players) : ""}
     </article>
   `;
 }

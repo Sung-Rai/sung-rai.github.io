@@ -814,7 +814,7 @@ button:hover {
 
 .post-game-row {
   display: grid;
-  grid-template-columns: 55px 1fr 1.4fr 58px 58px 58px;
+  grid-template-columns: 7.2rem 1fr 1.4fr 58px 58px 58px;
   gap: 0.5rem;
   align-items: center;
   margin-bottom: 0.55rem;
@@ -828,8 +828,10 @@ button:hover {
   font-weight: 600;
 }
 
-.post-game-row input {
+.post-game-row input,
+.post-game-row select {
   width: 100%;
+  min-width: 0;
   padding: 0.5rem;
   border: 1px solid var(--border-color-2);
   border-radius: 7px;
@@ -1526,7 +1528,7 @@ body {
 .manual-game-row {
   display: grid;
   grid-template-columns:
-    2.75rem
+    7.2rem
     minmax(7.5rem, 1.25fr)
     minmax(7rem, 1fr)
     3.1rem
@@ -2341,4 +2343,70 @@ body {
 /* Body column highlight can stay pale */
 .sortable-stats-table tbody td.sorted-column {
   background: var(--light-color-4);
+}
+
+.match-history-actions,
+.match-role-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.match-role-trigger {
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--border-color-2);
+  border-radius: var(--input-radius);
+  background: transparent;
+  color: var(--dark-color-1);
+  font: inherit;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.match-role-editor {
+  width: min(34rem, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  margin: auto;
+  padding: 1rem;
+  border: 1px solid var(--border-color-2);
+  border-radius: var(--input-radius);
+  color: var(--dark-color-1);
+  background: var(--light-color-2);
+}
+
+.match-role-editor::backdrop {
+  background: rgb(0 0 0 / 45%);
+}
+
+.match-role-teams {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 0.6rem;
+  margin: 0.6rem 0;
+}
+
+.match-role-teams fieldset {
+  min-width: 0;
+  border: 1px solid var(--border-color-2);
+  border-radius: var(--input-radius);
+}
+
+.match-role-teams label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 0.2rem 0;
+}
+
+.match-role-teams label span {
+  overflow-wrap: anywhere;
+}
+
+.match-role-teams select {
+  color: var(--dark-color-1);
+  background: var(--input-bg);
+  font: inherit;
 }

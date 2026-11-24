@@ -4,7 +4,7 @@ import {
   fetchPlayers,
   updatePlayerDefaultRatings
 } from "./statsApi.js";
-import { setupStatsTab, refreshStats } from "./statsTab.js";
+import { setupStatsTab, refreshStats, roleOptionsHtml } from "./statsTab.js";
 import { setupGameImport } from "./importGames.js";
 import { supabase } from "./supabaseClient.js";
 import {
@@ -827,7 +827,7 @@ function createPostGameForm(players, solution, teamAName, teamBName) {
           defaultRating: participant?.value ?? Number(row.dataset.defaultRating ?? 50),
           name: row.dataset.playerName,
           team: row.dataset.team,
-          role: row.dataset.role,
+          role: row.querySelector("[data-field='role']").value || null,
           champion: row.querySelector("[data-field='champion']").value,
           kills: row.querySelector("[data-field='kills']").value,
           deaths: row.querySelector("[data-field='deaths']").value,
@@ -908,7 +908,7 @@ function createPostGamePlayerRow(players, solutionEntry) {
   row.dataset.stableKey = player.stableKey ?? "";
   row.dataset.defaultRating = String(player.value ?? 50);
   row.innerHTML = `
-    <strong>${solutionEntry.role}</strong>
+    <select data-field="role" aria-label="Role">${roleOptionsHtml(solutionEntry.role)}</select>
     <span>${player.name}</span>
     <input data-field="champion" data-champion-input type="text" placeholder="Champion" required>
     <input data-field="kills" type="number" min="0" placeholder="K">
@@ -1050,7 +1050,7 @@ function createManualGamePlayerRow(team, role) {
   row.dataset.role = role;
 
   row.innerHTML = `
-    <strong>${role}</strong>
+    <select data-field="role" aria-label="Role">${roleOptionsHtml(role)}</select>
 
     <select data-field="player" required>
       <option value="">Select player</option>
@@ -1162,7 +1162,7 @@ async function handleManualGameSubmit(event) {
         defaultRating: Number(dbPlayer.default_rating ?? 50),
         name: dbPlayer.display_name,
         team: row.dataset.team,
-        role: row.dataset.role,
+        role: row.querySelector("[data-field='role']").value || null,
         champion: canonicalChampion,
         kills: readNumberOrNull(row.querySelector("[data-field='kills']")),
         deaths: readNumberOrNull(row.querySelector("[data-field='deaths']")),

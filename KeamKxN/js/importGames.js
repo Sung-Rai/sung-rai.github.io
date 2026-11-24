@@ -42,9 +42,10 @@ export function setupGameImport(options = {}) {
   importButton?.addEventListener("click", async () => {
     try {
         if (!canUseAdminFeatures()) {
-            if (status) status.textContent = "Log in as admin before importing games.";
-            return;
-        }
+        if (status) status.textContent = "Log in as admin before importing games.";
+        return;
+      }
+      importButton.disabled = true;
       if (status) status.textContent = "Importing games...";
 
       const games = parseImportPayload(textArea.value);
@@ -61,6 +62,8 @@ export function setupGameImport(options = {}) {
       if (status) {
         status.textContent = `Import failed: ${error.message}`;
       }
+    } finally {
+      importButton.disabled = false;
     }
   });
 

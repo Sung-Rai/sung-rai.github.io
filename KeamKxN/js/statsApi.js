@@ -81,13 +81,21 @@ function validateCompletedGame(game) {
     throw new Error("A completed game must contain exactly 10 players.");
   }
 
+  const assignedRoles = new Set();
   for (const player of game.players) {
     if (!["A", "B"].includes(player.team)) {
       throw new Error(`Invalid team for ${player.name}.`);
     }
 
-    if (!VALID_ROLES.has(player.role)) {
-      throw new Error(`Invalid role for ${player.name}: ${player.role}`);
+    if (player.role != null && player.role !== "") {
+      if (!VALID_ROLES.has(player.role)) {
+        throw new Error(`Invalid role for ${player.name}: ${player.role}`);
+      }
+      const assignment = `${player.team}:${player.role}`;
+      if (assignedRoles.has(assignment)) {
+        throw new Error(`Team ${player.team} has more than one ${player.role} assignment.`);
+      }
+      assignedRoles.add(assignment);
     }
 
     if (!player.name || !String(player.name).trim()) {
@@ -96,110 +104,61 @@ function validateCompletedGame(game) {
   }
 }
 
-async function upsertPlayers(players) {
-  const playerRows = players.map(player => ({
-    stable_key: getPlayerStableKey(player),
-    display_name: String(player.name).trim()
-  }));
-
-  const uniqueRows = [...new Map(
-    playerRows.map(row => [row.stable_key, row])
-  ).values()];
-
-  const { data, error } = await supabase
-    .from("players")
-    .upsert(uniqueRows, {
-      onConflict: "stable_key"
-    })
-    .select("id, stable_key, display_name");
-
-  if (error) throw error;
-
-  return new Map(data.map(row => [row.stable_key, row]));
-}
-
 export async function saveCompletedGame(game) {
   validateCompletedGame(game);
-
   const championIndex = await getChampionIndex();
-  const playerMap = await upsertPlayers(game.players);
+  const roster = game.players.map(player => ({
+    player_id: player.dbPlayerId || null,
+    stable_key: player.dbPlayerId ? null : getPlayerStableKey(player),
+    display_name: String(player.name).trim(),
+    team: player.team,
+    role: player.role || null,
+    champion: normaliseRequiredChampion(player.champion, championIndex, `${player.name}'s champion`),
+    kills: cleanNullableNumber(player.kills),
+    deaths: cleanNullableNumber(player.deaths),
+    assists: cleanNullableNumber(player.assists)
+  }));
+  const bans = (Array.isArray(game.bans) ? game.bans : [])
+    .map((ban, index) => ({
+      team: ["A", "B"].includes(ban.team) ? ban.team : null,
+      champion: normaliseOptionalChampion(ban.champion, championIndex, `ban ${index + 1}`),
+      ban_order: Number.isFinite(Number(ban.banOrder)) ? Number(ban.banOrder) : index + 1
+    }))
+    .filter(ban => ban.champion);
 
-  const { data: insertedGame, error: gameError } = await supabase
-    .from("games")
-    .insert({
+  const { data, error } = await supabase.rpc("save_completed_game", {
+    game: {
       played_at: game.playedAt || new Date().toISOString().slice(0, 10),
       title: game.title || null,
       winning_team: game.winningTeam,
       notes: game.notes || null,
       source: game.source || "manual"
-    })
-    .select("id, played_at, title, winning_team")
-    .single();
-
-  if (gameError) throw gameError;
-
-  const gamePlayerRows = game.players.map(player => {
-    const stableKey = getPlayerStableKey(player);
-    const dbPlayer = playerMap.get(stableKey);
-
-    if (!dbPlayer) {
-      throw new Error(`Could not resolve DB player for ${player.name}.`);
-    }
-
-    return {
-      game_id: insertedGame.id,
-      player_id: dbPlayer.id,
-      team: player.team,
-      role: player.role,
-      champion: normaliseRequiredChampion(
-        player.champion,
-        championIndex,
-        `${player.name}'s champion`
-      ),
-      kills: cleanNullableNumber(player.kills),
-      deaths: cleanNullableNumber(player.deaths),
-      assists: cleanNullableNumber(player.assists)
-    };
+    },
+    roster,
+    bans
   });
+  if (error) throw error;
+  return data;
+}
 
-  const { error: gamePlayersError } = await supabase
-    .from("game_players")
-    .insert(gamePlayerRows);
-
-  if (gamePlayersError) throw gamePlayersError;
-
-  const bans = Array.isArray(game.bans) ? game.bans : [];
-
-  const banRows = bans
-  .map((ban, index) => ({
-    game_id: insertedGame.id,
-    team: ["A", "B"].includes(ban.team) ? ban.team : null,
-    champion: normaliseOptionalChampion(
-      ban.champion,
-      championIndex,
-      `ban ${index + 1}`
-    ),
-    ban_order: Number.isFinite(Number(ban.banOrder))
-      ? Number(ban.banOrder)
-      : index + 1
-  }))
-  .filter(row => row.champion);
-
-  if (banRows.length > 0) {
-    const { error: bansError } = await supabase
-      .from("game_bans")
-      .insert(banRows);
-
-    if (bansError) throw bansError;
-  }
-
-  return insertedGame;
+export async function updateMatchRoles(matchId, revision, assignments) {
+  const { data, error } = await supabase.rpc("update_match_roles", {
+    match_id: matchId,
+    expected_revision: revision,
+    assignments
+  });
+  if (error) throw error;
+  return data;
 }
 
 export async function fetchGames() {
-  const { data, error } = await supabase
-    .from("games")
-    .select(`
+  const games = [];
+  const pageSize = 200;
+
+  for (let start = 0; ; start += pageSize) {
+    const { data, error } = await supabase
+      .from("games")
+      .select(`
       id,
       played_at,
       title,
@@ -207,7 +166,9 @@ export async function fetchGames() {
       notes,
       source,
       created_at,
+      role_revision,
       game_players (
+        id,
         team,
         role,
         champion,
@@ -225,12 +186,15 @@ export async function fetchGames() {
         ban_order
       )
     `)
-    .order("played_at", { ascending: false })
-    .order("created_at", { ascending: false });
+      .order("played_at", { ascending: false })
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(start, start + pageSize - 1);
 
-  if (error) throw error;
-
-  return data ?? [];
+    if (error) throw error;
+    games.push(...data);
+    if (data.length < pageSize) return games;
+  }
 }
 
 export async function fetchPlayers() {
@@ -276,12 +240,14 @@ export async function importCompletedGames(games) {
   const results = [];
 
   for (const game of games) {
-    const saved = await saveCompletedGame({
-      ...game,
-      source: game.source || "import"
-    });
-
-    results.push(saved);
+    try {
+      results.push(await saveCompletedGame({ ...game, source: game.source || "import" }));
+    } catch (error) {
+      throw new Error(
+        `Saved ${results.length} of ${games.length} games. Game ${results.length + 1} failed: ${error.message}`,
+        { cause: error }
+      );
+    }
   }
 
   return results;
