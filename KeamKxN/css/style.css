@@ -1728,17 +1728,16 @@ body {
 }
 
 .keamkxn-footer {
-  width: min(96%, var(--page-width-xl));
-  margin: 1rem auto 0;
-  padding: .5rem .5rem .75rem;
-  color: var(--dark-color-2);
+  padding: 0 clamp(1rem, 2.75vw, 3.25rem) .85rem;
+  background-color: var(--dark-color-1-soft);
+  color: var(--blue-color-1-soft);
   font-size: .75rem;
   line-height: 1.5;
   text-align: left;
 }
 
 .keamkxn-footer p {
-  max-width: 40ch;
+  max-width: 68ch;
   margin: 0;
 }
 
