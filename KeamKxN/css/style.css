@@ -1727,6 +1727,348 @@ body {
   background: var(--light-color-4);
 }
 
+.keamkxn-footer {
+  padding: 0 clamp(1rem, 2.75vw, 3.25rem) .85rem;
+  background-color: var(--dark-color-1-soft);
+  color: var(--blue-color-1-soft);
+  font-size: .75rem;
+  line-height: 1.5;
+  text-align: left;
+}
+
+.keamkxn-footer p {
+  max-width: 68ch;
+  margin: 0;
+}
+
+.add-game-method {
+  display: inline-flex;
+  gap: .25rem;
+  margin-top: .5rem;
+  padding: .25rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color-2);
+  background: var(--light-color-2-soft);
+}
+
+.add-game-method .tab-button {
+  padding: .35rem .75rem;
+  border-color: transparent;
+  color: var(--dark-color-1);
+  font-size: .875rem;
+}
+
+.add-game-method .tab-button[aria-selected="false"]:hover {
+  background: var(--light-color-4);
+}
+
+.add-game-method [aria-selected="true"] {
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+}
+
+#lcu-game-panel {
+  width: 100%;
+  margin: 0;
+  padding: .85rem;
+}
+
+#lcu-game-panel h3 {
+  margin: 0 0 .5rem;
+}
+
+#lcu-preview:not(:empty) {
+  margin-top: .8rem;
+}
+
+.lcu-match-card.match-history-card {
+  width: 100%;
+  margin: 0;
+}
+
+.lcu-team,
+.lcu-chart-team {
+  --lcu-team-accent: var(--blue-color-1);
+}
+
+.lcu-team[data-team="200"],
+.lcu-chart-team[data-team="200"] {
+  --lcu-team-accent: #b91c1c;
+}
+
+.lcu-team-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .5rem;
+  margin-bottom: .25rem;
+  padding-inline-start: .5rem;
+  border-inline-start: 3px solid var(--lcu-team-accent);
+}
+
+.lcu-team-result {
+  padding: .15rem .5rem;
+  border-radius: var(--radius-pill);
+  background: var(--dark-color-4);
+  color: var(--light-color-2);
+  font-weight: 700;
+}
+
+.lcu-team-result[data-result="victory"] {
+  background: #166534;
+}
+
+.lcu-controls:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: .55rem;
+  width: fit-content;
+  max-width: 100%;
+  padding: .6rem .7rem;
+  border: 1px solid var(--border-color-2);
+  border-radius: var(--radius-lg);
+  background: var(--card-bg);
+}
+
+.lcu-controls label {
+  display: grid;
+  gap: .3rem;
+  min-width: 0;
+  color: var(--dark-color-1);
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+.lcu-controls :is(input, button) {
+  min-height: 2.35rem;
+  border: 1px solid var(--input-border);
+  border-radius: var(--input-radius);
+  font: inherit;
+  font-size: .875rem;
+}
+
+.lcu-controls input {
+  width: min(15rem, 100%);
+  padding: .45rem .65rem;
+  background: var(--input-bg);
+  color: var(--dark-color-3);
+}
+
+.lcu-controls input[type="text"] {
+  font-variant-numeric: tabular-nums;
+}
+
+.lcu-controls button {
+  padding: .45rem .85rem;
+  background: var(--card-bg-soft);
+  color: var(--dark-color-1);
+  font-weight: 600;
+}
+
+.lcu-controls button[type="submit"] {
+  border-color: var(--button-primary-bg);
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+}
+
+.lcu-controls button[type="submit"]:hover:enabled {
+  background: var(--button-primary-bg-hover);
+}
+
+.lcu-controls button[type="submit"]:disabled {
+  border-color: var(--button-primary-bg-disabled);
+  background: var(--button-primary-bg-disabled);
+  cursor: wait;
+}
+
+.lcu-controls button[type="button"]:hover {
+  background: var(--light-color-4);
+}
+
+.lcu-controls :is(input, button):focus-visible {
+  outline: 2px solid var(--blue-color-1);
+  outline-offset: 2px;
+}
+
+#lcu-status {
+  margin-top: .45rem;
+}
+
+.lcu-table-wrap {
+  overflow-x: auto;
+}
+
+.lcu-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .875rem;
+}
+
+.lcu-table-wrap :is(th, td) {
+  padding: .35rem .5rem;
+  border-bottom: 1px solid var(--table-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.lcu-table-wrap .match-champion-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.lcu-table-wrap :is(th, td):nth-child(n + 3) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.lcu-table-wrap th {
+  color: var(--dark-color-2);
+  font-weight: 600;
+}
+
+.lcu-team-details .match-bans {
+  margin-top: .55rem;
+}
+
+.lcu-team-details .lcu-ban-name {
+  width: auto;
+  padding-inline: .35rem;
+}
+
+.lcu-objectives {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem .65rem;
+  margin: .5rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: .8rem;
+}
+
+.lcu-objectives li {
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
+}
+
+.lcu-objectives img {
+  width: 17px;
+  height: 17px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: var(--dark-color-1);
+}
+
+.lcu-match-details {
+  padding: .6rem var(--space-lg);
+  border-top: 1px solid var(--border-color-3);
+}
+
+.lcu-match-details summary {
+  width: fit-content;
+  color: var(--blue-color-1-hover);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lcu-chart-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: .75rem 1.25rem;
+  margin: .65rem 0 .2rem;
+}
+
+.lcu-metrics {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: .15rem;
+  max-width: 100%;
+  margin-top: .65rem;
+  padding: .2rem;
+  border: 1px solid var(--border-color-3);
+  border-radius: var(--radius-lg);
+  background: var(--card-bg-soft);
+}
+
+.lcu-metrics button {
+  padding: .3rem .6rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--dark-color-1);
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lcu-metrics button:hover {
+  background: var(--light-color-4);
+}
+
+.lcu-metrics button[aria-pressed="true"] {
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+}
+
+.lcu-chart-team h4 {
+  margin: 0 0 .2rem;
+  padding-inline-start: .45rem;
+  border-inline-start: 3px solid var(--lcu-team-accent);
+  font-size: .875rem;
+}
+
+.lcu-chart {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: .8rem;
+}
+
+.lcu-chart-row {
+  display: grid;
+  grid-template-columns: 25px minmax(0, 1fr);
+  gap: .45rem;
+  align-items: center;
+  padding: .3rem 0;
+  border-bottom: 1px solid var(--border-color-3);
+}
+
+.lcu-chart-row :is(.match-champion-icon, .match-champion-placeholder) {
+  width: 25px;
+  height: 25px;
+}
+
+.lcu-chart-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 .5rem;
+  margin-bottom: .2rem;
+}
+
+.lcu-chart-label strong {
+  color: var(--dark-color-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.lcu-chart-track {
+  height: .35rem;
+  border-radius: var(--radius-pill);
+  background: var(--card-bg-soft);
+  box-shadow: inset 0 0 0 1px var(--border-color-3);
+  overflow: hidden;
+}
+
+.lcu-chart-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--lcu-team-accent);
+}
+
 /* -------------------- Generator sections polish -------------------- */
 
 /* Saved player toolbar */
