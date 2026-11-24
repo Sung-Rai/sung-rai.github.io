@@ -16,6 +16,34 @@ class LookupError(Exception):
     """Safe diagnostic suitable for terminal output."""
 
 
+class LcuHttpError(LookupError):
+    def __init__(self, status):
+        self.status = status
+        message = (f"Local authentication or access denied (HTTP {status})."
+                   if status in (401, 403) else f"HTTP {status}")
+        super().__init__(message)
+
+
+def parse_game_id(value):
+    if not isinstance(value, str) or len(value) > 40:
+        return None
+    match = re.fullmatch(r"(?:(?P<platform>[A-Za-z][A-Za-z0-9]*)_)?(?P<id>[1-9][0-9]{0,19})", value)
+    if not match or int(match["id"]) >= 2**64:
+        return None
+    return match
+
+
+def fetch_match(client, game_id):
+    match = get(client, f"/lol-match-history/v1/games/{game_id}")
+    if not isinstance(match, dict) or str(match.get("gameId")) != game_id:
+        raise LookupError("Unexpected match response or mismatched game ID.")
+    return match
+
+
+def fetch_timeline(client, game_id):
+    return get(client, f"/lol-match-history/v1/game-timelines/{game_id}")
+
+
 def powershell(command):
     executable = Path(os.environ["SystemRoot"]) / "System32/WindowsPowerShell/v1.0/powershell.exe"
     result = subprocess.run(
@@ -85,10 +113,8 @@ def get(client, route):
         auth = base64.b64encode(("riot:" + password).encode()).decode("ascii")
         connection.request("GET", route, headers={"Authorization": "Basic " + auth})
         response = connection.getresponse()
-        if response.status in (401, 403):
-            raise LookupError(f"Local authentication or access denied (HTTP {response.status}).")
         if response.status != 200:
-            raise LookupError(f"HTTP {response.status}")
+            raise LcuHttpError(response.status)
         try:
             return json.load(response)
         except ValueError:
@@ -132,15 +158,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--game-id", required=True)
     args = parser.parse_args()
-    match_id = re.fullmatch(r"(?:[A-Za-z][A-Za-z0-9]*_)?([1-9][0-9]{0,19})", args.game_id)
-    if not match_id or int(match_id[1]) >= 2**64:
+    match_id = parse_game_id(args.game_id)
+    if not match_id:
         parser.error("Expected a positive numeric game ID, optionally platform-prefixed.")
-    game_id = match_id[1]
-    prefix = "/lol-match-history/v1/"
+    game_id = match_id["id"]
     client = discover()
-    report(get(client, prefix + "games/" + game_id), game_id)
+    report(fetch_match(client, game_id), game_id)
     try:
-        timeline = get(client, prefix + "game-timelines/" + game_id)
+        timeline = fetch_timeline(client, game_id)
         frames = timeline.get("frames") if isinstance(timeline, dict) else None
         print("Timeline frames:", len(frames) if isinstance(frames, list) else "unavailable")
     except LookupError as error:

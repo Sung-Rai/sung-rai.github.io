@@ -6,6 +6,7 @@ import {
 } from "./statsApi.js";
 import { setupStatsTab, refreshStats } from "./statsTab.js";
 import { setupGameImport } from "./importGames.js";
+import { setupMatchPreview } from "./matchPreview.js";
 import { supabase } from "./supabaseClient.js";
 import {
   getChampionIndex,
@@ -20,6 +21,7 @@ import {
 } from "./auth.js";
 
 let adminMode = false;
+const clearMatchPreview = setupMatchPreview(() => adminMode);
 
 // -------------------- Rating slider --------------------
 
@@ -35,6 +37,7 @@ function setAdminUiEnabled(enabled) {
   });
 
   if (!enabled) {
+    clearMatchPreview();
     const activeAdminPanel = document.querySelector(".tab-panel.active[data-admin-only]");
 
     if (activeAdminPanel) {
@@ -107,6 +110,7 @@ document.getElementById("login-btn")?.addEventListener("click", async () => {
 });
 
 document.getElementById("logout-btn")?.addEventListener("click", async () => {
+  clearMatchPreview();
   clearAdminGeneratedUi();
 
   const usernameInput = document.getElementById("login-username");
@@ -119,7 +123,8 @@ document.getElementById("logout-btn")?.addEventListener("click", async () => {
   await refreshAuthState();
 });
 
-supabase.auth.onAuthStateChange(() => {
+supabase.auth.onAuthStateChange(event => {
+  if (event === "SIGNED_OUT") clearMatchPreview();
   refreshAuthState();
 });
 
@@ -1521,7 +1526,35 @@ window.addEventListener("load", () => {
 });
 
 document.querySelector("[data-tab='manual-game']")?.addEventListener("click", () => {
-  renderManualGameForm();
+  if (!document.getElementById("manual-game-form").hidden) renderManualGameForm();
+});
+
+const addGameMethods = [...document.querySelectorAll("#add-game-method [role='tab']")];
+
+function selectAddGameMethod(selectedTab) {
+  for (const tab of addGameMethods) {
+    const selected = tab === selectedTab;
+    tab.setAttribute("aria-selected", String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+    document.getElementById(tab.getAttribute("aria-controls")).hidden = !selected;
+  }
+}
+
+addGameMethods.forEach((tab, index) => {
+  tab.addEventListener("click", () => selectAddGameMethod(tab));
+  tab.addEventListener("keydown", event => {
+    const last = addGameMethods.length - 1;
+    const next = {
+      ArrowLeft: addGameMethods[index - 1] ?? addGameMethods[last],
+      ArrowRight: addGameMethods[index + 1] ?? addGameMethods[0],
+      Home: addGameMethods[0],
+      End: addGameMethods[last]
+    }[event.key];
+    if (!next) return;
+    event.preventDefault();
+    selectAddGameMethod(next);
+    next.focus();
+  });
 });
 
 setupStatsTab({

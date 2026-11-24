@@ -189,12 +189,31 @@
   <div class="manual-game-page">
     <header class="manual-game-page-header">
       <h2>Add Game</h2>
-      <p class="muted">
-        Submit a completed game manually using database players, champion autocomplete, bans, and KDA.
-      </p>
+      <div id="add-game-method" class="add-game-method" role="tablist" aria-label="Add game method">
+        <button id="add-game-manual-tab" class="tab-button" type="button" role="tab" aria-selected="true" aria-controls="manual-game-form">Manual Entry</button>
+        <button id="add-game-id-tab" class="tab-button" type="button" role="tab" aria-selected="false" aria-controls="lcu-game-panel" tabindex="-1">Game ID</button>
+      </div>
     </header>
 
-    <div id="manual-game-form"></div>
+    <div id="manual-game-form" role="tabpanel" aria-labelledby="add-game-manual-tab"></div>
+    <section id="lcu-game-panel" class="stats-section" role="tabpanel" aria-labelledby="add-game-id-tab" hidden>
+      <h3>Retrieve Custom Game</h3>
+      <form id="lcu-pair-form" class="lcu-controls" autocomplete="off">
+        <label>Companion pairing code
+          <input id="lcu-code" type="password" required maxlength="32" autocomplete="off" spellcheck="false">
+        </label>
+        <button type="submit" class="selector">Pair Companion</button>
+      </form>
+      <form id="lcu-match-form" class="lcu-controls" autocomplete="off" hidden>
+        <label>Game ID
+          <input id="lcu-game-id" type="text" required maxlength="40" autocomplete="off" spellcheck="false">
+        </label>
+        <button type="submit" class="selector">Retrieve Game</button>
+        <button id="lcu-disconnect" type="button" class="selector">Disconnect</button>
+      </form>
+      <p id="lcu-status" class="muted" role="status">Start the Windows companion to get a pairing code.</p>
+      <div id="lcu-preview"></div>
+    </section>
   </div>
 </section>
 
