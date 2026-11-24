@@ -1,4 +1,4 @@
-const ROLE_ORDER = ["Top", "Jun", "Mid", "Adc", "Sup"];
+export const ROLE_ORDER = ["Top", "Jun", "Mid", "Adc", "Sup"];
 
 function pct(numerator, denominator) {
   if (!denominator) return 0;
@@ -35,8 +35,8 @@ function ensurePlayer(stats, player) {
         Adc: 0,
         Sup: 0
       },
-      botLaneGames: 0,
-      botLaneRate: 0
+      assignedRoleGames: 0,
+      botLaneGames: 0
     });
   }
 
@@ -76,6 +76,7 @@ export function calculatePlayerStats(games) {
     }
 
       if (ROLE_ORDER.includes(row.role)) {
+        player.assignedRoleGames += 1;
         player.roles[row.role] += 1;
 
         if (won) {
@@ -93,7 +94,9 @@ export function calculatePlayerStats(games) {
     .map(player => ({
       ...player,
       winrate: pct(player.wins, player.games),
-      botLaneRate: pct(player.botLaneGames, player.games),
+      botLaneRate: player.assignedRoleGames
+        ? pct(player.botLaneGames, player.assignedRoleGames)
+        : null,
       kda: player.gamesWithKda > 0
         ? player.deaths === 0
             ? player.kills + player.assists > 0
@@ -102,7 +105,10 @@ export function calculatePlayerStats(games) {
             : (player.kills + player.assists) / player.deaths
         : null,
       roleRates: Object.fromEntries(
-        ROLE_ORDER.map(role => [role, pct(player.roles[role], player.games)])
+        ROLE_ORDER.map(role => [
+          role,
+          player.assignedRoleGames ? pct(player.roles[role], player.assignedRoleGames) : null
+        ])
       ),
       roleWinrates: Object.fromEntries(
         ROLE_ORDER.map(role => [role, pct(player.roleWins[role], player.roles[role])])
